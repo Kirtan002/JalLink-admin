@@ -1,11 +1,20 @@
 import type {
+  AdminAuditLog,
+  AdminExtraBottleOrder,
+  AdminPayment,
   AdminSubscription,
   CreatePlanInput,
   Delivery,
   DeliveryPartner,
+  PaymentPurpose,
+  PaymentStatus,
   Plan,
+  PlatformSettings,
+  ReferralLeaderboardRow,
   SubscriptionStatus,
   UpdatePlanInput,
+  UpdateSettingsInput,
+  WalletSummary,
 } from './types';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'https://jallink-backend.onrender.com';
@@ -23,9 +32,21 @@ export class ApiError extends Error {
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const method = init?.method ?? 'GET';
+  const url = `${API_BASE_URL}${path}`;
+  // Runs server-side (Server Components/Actions) — shows up in your `next dev`/`next start`
+  // terminal, not the browser console. Exactly what backend URL each admin call is hitting.
+  console.log(`[api] ${method} ${url}`);
+
+  const res = await fetch(url, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      // Attributes /admin/* writes to a name in the backend's audit log — not auth, just
+      // the one shared ADMIN_USERNAME this panel logs in with (see lib/session.ts).
+      'X-Admin-Actor': process.env.ADMIN_USERNAME ?? 'unknown',
+      ...init?.headers,
+    },
     cache: 'no-store',
   });
 
@@ -41,6 +62,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       // response body wasn't JSON — fall back to the generic message above
     }
+    console.error(`[api] ${method} ${url} -> ${res.status} ${code}: ${message}`);
     throw new ApiError(res.status, code, message);
   }
 
@@ -66,6 +88,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  getDeliveryPartnerWallet: (id: string) =>
+    apiFetch<WalletSummary>(`/admin/delivery-partners/${id}/wallet`),
+  withdrawDeliveryPartnerWallet: (id: string, input: { amount: number; note?: string }) =>
+    apiFetch<{ balance: string }>(`/admin/delivery-partners/${id}/wallet/withdraw`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 
   listSubscriptions: (status?: SubscriptionStatus) =>
     apiFetch<AdminSubscription[]>(`/admin/subscriptions${status ? `?status=${status}` : ''}`),
@@ -76,4 +105,29 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify({ deliveryPartnerId }),
     }),
+
+  getSettings: () => apiFetch<PlatformSettings>('/admin/settings'),
+  updateSettings: (input: UpdateSettingsInput) =>
+    apiFetch<PlatformSettings>('/admin/settings', { method: 'PATCH', body: JSON.stringify(input) }),
+
+  listPayments: (params?: { status?: PaymentStatus; purpose?: PaymentPurpose }) => {
+    const query = new URLSearchParams();
+    if (params?.status) query.set('status', params.status);
+    if (params?.purpose) query.set('purpose', params.purpose);
+    const qs = query.toString();
+    return apiFetch<AdminPayment[]>(`/admin/payments${qs ? `?${qs}` : ''}`);
+  },
+
+  getAdminWallet: () => apiFetch<WalletSummary>('/admin/wallet'),
+  withdrawAdminWallet: (input: { amount: number; note?: string }) =>
+    apiFetch<{ balance: string }>('/admin/wallet/withdraw', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
+  listReferrals: () => apiFetch<ReferralLeaderboardRow[]>('/admin/referrals'),
+
+  listExtraBottleOrders: () => apiFetch<AdminExtraBottleOrder[]>('/admin/extra-bottle-orders'),
+
+  listAuditLogs: () => apiFetch<AdminAuditLog[]>('/admin/logs'),
 };

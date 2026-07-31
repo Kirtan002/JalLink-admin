@@ -63,12 +63,13 @@ export function CreatePlanForm() {
           id="price"
           name="price"
           type="number"
-          min={0}
-          step="0.01"
-          placeholder="1500"
+          min={1}
+          step={1}
+          placeholder="1503"
           required
           className={`w-28 ${inputClass}`}
         />
+        <p className="text-xs text-(--color-text-muted)">Whole rupees, evenly divisible by the referral divisor above.</p>
       </div>
       <button
         type="submit"

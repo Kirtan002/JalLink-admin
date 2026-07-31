@@ -24,27 +24,6 @@ export const MOCK_DELIVERIES: MockDelivery[] = [
   { id: 'DLV-10358', customerName: 'Ishita Kapoor', planName: 'Office Bulk', partnerName: 'Suresh Kumar', status: 'delivered', scheduledDate: '2026-07-27' },
 ];
 
-export type WalletEntryType = 'credit' | 'debit';
-
-export interface WalletEntry {
-  id: string;
-  partnerName: string;
-  type: WalletEntryType;
-  amount: number;
-  reason: string;
-  balanceAfter: number;
-  occurredAt: string;
-}
-
-export const MOCK_WALLET_ENTRIES: WalletEntry[] = [
-  { id: 'WAL-58831', partnerName: 'Suresh Kumar', type: 'credit', amount: 420, reason: 'Delivery payout — 21 Jul batch', balanceAfter: 3180, occurredAt: '2026-07-31T09:12:00Z' },
-  { id: 'WAL-58830', partnerName: 'Ravi Patil', type: 'debit', amount: 2500, reason: 'Weekly payout transfer', balanceAfter: 640, occurredAt: '2026-07-30T18:40:00Z' },
-  { id: 'WAL-58822', partnerName: 'Anil Yadav', type: 'credit', amount: 360, reason: 'Delivery payout — 20 Jul batch', balanceAfter: 3140, occurredAt: '2026-07-30T09:05:00Z' },
-  { id: 'WAL-58810', partnerName: 'Suresh Kumar', type: 'credit', amount: 480, reason: 'Delivery payout — 20 Jul batch', balanceAfter: 2760, occurredAt: '2026-07-29T09:00:00Z' },
-  { id: 'WAL-58799', partnerName: 'Ravi Patil', type: 'debit', amount: 150, reason: 'Adjustment — missed delivery penalty', balanceAfter: 3140, occurredAt: '2026-07-28T14:22:00Z' },
-  { id: 'WAL-58784', partnerName: 'Anil Yadav', type: 'credit', amount: 400, reason: 'Delivery payout — 19 Jul batch', balanceAfter: 2780, occurredAt: '2026-07-28T09:10:00Z' },
-];
-
 export interface CommissionTier {
   id: string;
   name: string;
@@ -58,44 +37,6 @@ export const MOCK_COMMISSION_TIERS: CommissionTier[] = [
   { id: 'CMT-2', name: 'Silver (500+ deliveries/mo)', ratePercent: 10, partnerCount: 6, isActive: true },
   { id: 'CMT-3', name: 'Gold (1000+ deliveries/mo)', ratePercent: 12, partnerCount: 2, isActive: true },
   { id: 'CMT-4', name: 'Legacy flat rate', ratePercent: 6, partnerCount: 0, isActive: false },
-];
-
-export type PaymentStatus = 'success' | 'failed' | 'pending' | 'refunded';
-
-export interface PaymentTransaction {
-  id: string;
-  customerName: string;
-  type: 'Subscription payment' | 'Renewal' | 'Refund';
-  amount: number;
-  status: PaymentStatus;
-  occurredAt: string;
-}
-
-export const MOCK_PAYMENTS: PaymentTransaction[] = [
-  { id: 'TXN-88231', customerName: 'Rohan Mehta', type: 'Subscription payment', amount: 899, status: 'success', occurredAt: '2026-07-31T08:05:00Z' },
-  { id: 'TXN-88229', customerName: 'Sneha Iyer', type: 'Renewal', amount: 1499, status: 'success', occurredAt: '2026-07-31T07:40:00Z' },
-  { id: 'TXN-88214', customerName: 'Kabir Nair', type: 'Subscription payment', amount: 649, status: 'pending', occurredAt: '2026-07-30T19:02:00Z' },
-  { id: 'TXN-88190', customerName: 'Priya Desai', type: 'Subscription payment', amount: 1499, status: 'failed', occurredAt: '2026-07-30T11:18:00Z' },
-  { id: 'TXN-88177', customerName: 'Vikram Rao', type: 'Refund', amount: 649, status: 'refunded', occurredAt: '2026-07-29T15:47:00Z' },
-  { id: 'TXN-88150', customerName: 'Ishita Kapoor', type: 'Renewal', amount: 899, status: 'success', occurredAt: '2026-07-29T09:33:00Z' },
-];
-
-export type ReferralStatus = 'pending' | 'rewarded' | 'expired';
-
-export interface Referral {
-  id: string;
-  referrerName: string;
-  code: string;
-  referredName: string;
-  reward: string;
-  status: ReferralStatus;
-}
-
-export const MOCK_REFERRALS: Referral[] = [
-  { id: 'REF-4021', referrerName: 'Rohan Mehta', code: 'ROHAN200', referredName: 'Manish Gupta', reward: '₹200 credit', status: 'rewarded' },
-  { id: 'REF-4020', referrerName: 'Aditi Sharma', code: 'ADITI200', referredName: 'Neha Joshi', reward: '₹200 credit', status: 'pending' },
-  { id: 'REF-4014', referrerName: 'Arjun Verma', code: 'ARJUN200', referredName: 'Divya Menon', reward: '₹200 credit', status: 'rewarded' },
-  { id: 'REF-3998', referrerName: 'Priya Desai', code: 'PRIYA200', referredName: 'Karan Malhotra', reward: '₹200 credit', status: 'expired' },
 ];
 
 export type NotificationStatus = 'sent' | 'sending' | 'scheduled' | 'failed';

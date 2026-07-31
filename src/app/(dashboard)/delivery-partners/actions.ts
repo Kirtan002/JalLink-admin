@@ -9,6 +9,11 @@ export interface CreatePartnerState {
   success?: boolean;
 }
 
+export interface WithdrawPartnerWalletState {
+  error?: string;
+  success?: boolean;
+}
+
 export async function createDeliveryPartner(
   _prevState: CreatePartnerState,
   formData: FormData,
@@ -30,5 +35,27 @@ export async function createDeliveryPartner(
 
   revalidatePath('/delivery-partners');
   revalidatePath('/');
+  return { success: true };
+}
+
+export async function withdrawDeliveryPartnerWallet(
+  partnerId: string,
+  _prevState: WithdrawPartnerWalletState,
+  formData: FormData,
+): Promise<WithdrawPartnerWalletState> {
+  await requireSession();
+
+  const amount = Number(formData.get('amount'));
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { error: 'Amount must be a positive number' };
+  }
+
+  try {
+    await api.withdrawDeliveryPartnerWallet(partnerId, { amount });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : 'Failed to withdraw' };
+  }
+
+  revalidatePath('/delivery-partners');
   return { success: true };
 }

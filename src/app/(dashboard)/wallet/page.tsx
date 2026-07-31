@@ -1,50 +1,78 @@
+import { api, ApiError } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
+import { ErrorBanner } from '@/components/ErrorBanner';
+import { EmptyState } from '@/components/EmptyState';
 import { StatCard } from '@/components/StatCard';
-import { DemoDataNotice } from '@/components/DemoDataNotice';
 import { DataTable } from '@/components/DataTable';
+import { Card } from '@/components/Card';
 import { Badge } from '@/components/Badge';
 import { formatCurrency, formatDateTime } from '@/lib/format';
-import { MOCK_WALLET_ENTRIES } from '@/lib/mockData';
+import { WithdrawForm } from './withdraw-form';
+import type { WalletTxnReason } from '@/lib/types';
 
-export default function WalletPage() {
-  const totalBalance = MOCK_WALLET_ENTRIES.reduce(
-    (max, e) => Math.max(max, e.balanceAfter),
-    0,
-  );
-  const payoutsDue = MOCK_WALLET_ENTRIES.filter((e) => e.type === 'credit').reduce((sum, e) => sum + e.amount, 0);
-  const paidOut = MOCK_WALLET_ENTRIES.filter((e) => e.type === 'debit').reduce((sum, e) => sum + e.amount, 0);
+const REASON_LABEL: Record<WalletTxnReason, string> = {
+  referral_bonus: 'Referral bonus',
+  platform_share: 'Platform share (no referrer)',
+  wallet_redemption: 'Wallet redemption',
+  withdrawal: 'Withdrawal',
+};
+
+export default async function WalletPage() {
+  let wallet;
+  try {
+    wallet = await api.getAdminWallet();
+  } catch (err) {
+    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    return (
+      <>
+        <PageHeader title="Wallet" />
+        <ErrorBanner message={message} />
+      </>
+    );
+  }
+
+  const credited = wallet.transactions.filter((t) => t.type === 'credit').reduce((sum, t) => sum + Number(t.amount), 0);
+  const debited = wallet.transactions.filter((t) => t.type === 'debit').reduce((sum, t) => sum + Number(t.amount), 0);
 
   return (
     <>
-      <PageHeader title="Wallet" description="Delivery partner payout ledger — credits and debits against each partner's balance." />
-      <DemoDataNotice />
+      <PageHeader
+        title="Wallet"
+        description="The platform's own wallet — receives a share of every subscription purchase from a user with no referrer. Admin can withdraw; regular users never can."
+      />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Highest partner balance" value={formatCurrency(String(totalBalance))} tone="blue" />
-        <StatCard label="Payouts accrued" value={formatCurrency(String(payoutsDue))} tone="green" />
-        <StatCard label="Paid out this week" value={formatCurrency(String(paidOut))} tone="slate" />
-        <StatCard label="Failed payouts" value={0} tone="amber" />
+        <StatCard label="Current balance" value={formatCurrency(wallet.balance)} tone="blue" />
+        <StatCard label="Total credited" value={formatCurrency(String(credited))} tone="green" />
+        <StatCard label="Total withdrawn" value={formatCurrency(String(debited))} tone="slate" />
+        <StatCard label="Transactions" value={wallet.transactions.length} tone="amber" />
       </div>
 
-      <div className="mt-8">
+      <Card title="Withdraw" className="mt-8 mb-8">
+        <WithdrawForm />
+      </Card>
+
+      {wallet.transactions.length === 0 ? (
+        <EmptyState title="No wallet activity yet" />
+      ) : (
         <DataTable
           columns={[
-            { header: 'Partner', cell: (e) => <span className="font-medium text-(--color-text)">{e.partnerName}</span> },
             {
               header: 'Type',
-              cell: (e) => <Badge tone={e.type === 'credit' ? 'green' : 'slate'}>{e.type === 'credit' ? 'Credit' : 'Debit'}</Badge>,
+              cell: (t) => <Badge tone={t.type === 'credit' ? 'green' : 'slate'}>{t.type === 'credit' ? 'Credit' : 'Debit'}</Badge>,
             },
-            { header: 'Amount', cell: (e) => formatCurrency(String(e.amount)) },
-            { header: 'Reason', cell: (e) => <span className="text-(--color-text-muted)">{e.reason}</span> },
-            { header: 'Balance after', cell: (e) => formatCurrency(String(e.balanceAfter)) },
+            { header: 'Amount', cell: (t) => formatCurrency(t.amount) },
+            { header: 'Reason', cell: (t) => <span className="text-(--color-text-muted)">{REASON_LABEL[t.reason]}</span> },
+            { header: 'Note', cell: (t) => <span className="text-(--color-text-muted)">{t.note ?? '—'}</span> },
+            { header: 'Balance after', cell: (t) => formatCurrency(t.balanceAfter) },
             {
               header: 'Time',
-              cell: (e) => <span className="text-(--color-text-muted)">{formatDateTime(e.occurredAt)}</span>,
+              cell: (t) => <span className="text-(--color-text-muted)">{formatDateTime(t.createdAt)}</span>,
             },
           ]}
-          rows={MOCK_WALLET_ENTRIES}
+          rows={wallet.transactions}
         />
-      </div>
+      )}
     </>
   );
 }

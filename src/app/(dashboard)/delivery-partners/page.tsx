@@ -7,8 +7,13 @@ import { PartnersTable } from './partners-table';
 
 export default async function DeliveryPartnersPage() {
   let partners;
+  let wallets: Record<string, string>;
   try {
     partners = await api.listDeliveryPartners();
+    const walletEntries = await Promise.all(
+      partners.map(async (p) => [p.id, (await api.getDeliveryPartnerWallet(p.id)).balance] as const),
+    );
+    wallets = Object.fromEntries(walletEntries);
   } catch (err) {
     const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
     return (
@@ -23,14 +28,14 @@ export default async function DeliveryPartnersPage() {
     <>
       <PageHeader
         title="Delivery Partners"
-        description="Assigned to a subscription from the start — the same partner handles every delivery for that subscription."
+        description="Assigned to a subscription from the start — the same partner handles every delivery for that subscription. Wallets have no earning logic yet (commissions are future scope) — withdraw is wired up and ready for when they do."
       />
 
       <Card className="mb-8">
         <CreatePartnerForm />
       </Card>
 
-      <PartnersTable partners={partners} />
+      <PartnersTable partners={partners} wallets={wallets} />
     </>
   );
 }

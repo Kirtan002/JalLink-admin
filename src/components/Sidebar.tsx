@@ -17,6 +17,7 @@ const NAV_GROUPS: { label: string; items: { href: string; label: string }[] }[] 
       { href: '/delivery-partners', label: 'Delivery Partners' },
       { href: '/deliveries', label: 'Deliveries' },
       { href: '/plans', label: 'Plans' },
+      { href: '/extra-bottle-orders', label: 'Extra Bottles' },
     ],
   },
   {
@@ -39,6 +40,7 @@ const NAV_GROUPS: { label: string; items: { href: string; label: string }[] }[] 
     items: [
       { href: '/reports', label: 'Reports' },
       { href: '/analytics', label: 'Analytics' },
+      { href: '/activity-log', label: 'Activity Log' },
     ],
   },
 ];

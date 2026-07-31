@@ -71,8 +71,8 @@ export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void 
           id={`price-${plan.id}`}
           name="price"
           type="number"
-          min={0}
-          step="0.01"
+          min={1}
+          step={1}
           defaultValue={plan.price}
           required
           className={`w-28 ${inputClass}`}

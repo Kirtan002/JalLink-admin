@@ -1,6 +1,12 @@
 import { Badge } from './Badge';
-import type { DeliveryPartnerKycStatus, DeliveryStatus, SubscriptionStatus } from '@/lib/types';
-import type { NotificationStatus, PaymentStatus, ReferralStatus, ReportStatus } from '@/lib/mockData';
+import type {
+  DeliveryPartnerKycStatus,
+  DeliveryStatus,
+  ExtraBottleOrderStatus,
+  PaymentStatus,
+  SubscriptionStatus,
+} from '@/lib/types';
+import type { NotificationStatus, ReportStatus } from '@/lib/mockData';
 
 function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -39,24 +45,24 @@ export function PartnerKycStatusBadge({ status }: { status: DeliveryPartnerKycSt
 }
 
 const PAYMENT_STATUS_TONE: Record<PaymentStatus, 'green' | 'slate' | 'amber' | 'red' | 'blue'> = {
-  success: 'green',
-  pending: 'amber',
+  created: 'amber',
+  paid: 'green',
   failed: 'red',
-  refunded: 'blue',
 };
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
   return <Badge tone={PAYMENT_STATUS_TONE[status]}>{capitalize(status)}</Badge>;
 }
 
-const REFERRAL_STATUS_TONE: Record<ReferralStatus, 'green' | 'slate' | 'amber'> = {
-  pending: 'amber',
-  rewarded: 'green',
-  expired: 'slate',
+const EXTRA_BOTTLE_ORDER_STATUS_TONE: Record<ExtraBottleOrderStatus, 'green' | 'slate' | 'amber' | 'red'> = {
+  pending_payment: 'amber',
+  paid: 'green',
+  failed: 'red',
+  cancelled: 'slate',
 };
 
-export function ReferralStatusBadge({ status }: { status: ReferralStatus }) {
-  return <Badge tone={REFERRAL_STATUS_TONE[status]}>{capitalize(status)}</Badge>;
+export function ExtraBottleOrderStatusBadge({ status }: { status: ExtraBottleOrderStatus }) {
+  return <Badge tone={EXTRA_BOTTLE_ORDER_STATUS_TONE[status]}>{capitalize(status.replace('_', ' '))}</Badge>;
 }
 
 const NOTIFICATION_STATUS_TONE: Record<NotificationStatus, 'green' | 'slate' | 'blue' | 'red'> = {

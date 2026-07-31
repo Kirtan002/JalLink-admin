@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { PartnerKycStatusBadge } from '@/components/StatusBadge';
 import { formatDate } from '@/lib/format';
 import type { DeliveryPartner, DeliveryPartnerKycStatus } from '@/lib/types';
+import { PartnerWalletCell } from './wallet-cell';
 
 const FILTERS: { label: string; value: DeliveryPartnerKycStatus | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -16,7 +17,13 @@ const FILTERS: { label: string; value: DeliveryPartnerKycStatus | 'all' }[] = [
   { label: 'Rejected', value: 'rejected' },
 ];
 
-export function PartnersTable({ partners }: { partners: DeliveryPartner[] }) {
+export function PartnersTable({
+  partners,
+  wallets,
+}: {
+  partners: DeliveryPartner[];
+  wallets: Record<string, string>;
+}) {
   const [statusById, setStatusById] = useState<Record<string, DeliveryPartnerKycStatus>>(() =>
     Object.fromEntries(partners.map((p) => [p.id, p.isActive ? 'active' : 'suspended'])),
   );
@@ -73,6 +80,11 @@ export function PartnersTable({ partners }: { partners: DeliveryPartner[] }) {
             {
               header: 'Added',
               cell: (p) => <span className="text-(--color-text-muted)">{formatDate(p.createdAt)}</span>,
+            },
+            {
+              header: 'Wallet',
+              align: 'right',
+              cell: (p) => <PartnerWalletCell partnerId={p.id} balance={wallets[p.id] ?? '0.00'} />,
             },
             {
               header: '',

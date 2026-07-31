@@ -83,3 +83,89 @@ export interface Delivery {
   createdAt: string;
   updatedAt: string;
 }
+
+export type PaymentStatus = 'created' | 'paid' | 'failed';
+export type PaymentPurpose = 'subscription' | 'extra_bottles';
+export type PaymentProvider = 'razorpay' | 'wallet';
+
+export interface AdminPayment {
+  id: string;
+  purpose: PaymentPurpose;
+  status: PaymentStatus;
+  provider: PaymentProvider;
+  totalAmount: string;
+  walletAmount: string;
+  gatewayAmount: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string | null;
+    mobile: string;
+  };
+}
+
+export type WalletTxnType = 'credit' | 'debit';
+export type WalletTxnReason = 'referral_bonus' | 'platform_share' | 'wallet_redemption' | 'withdrawal';
+
+export interface WalletTransaction {
+  id: string;
+  walletId: string;
+  type: WalletTxnType;
+  reason: WalletTxnReason;
+  amount: string;
+  balanceAfter: string;
+  paymentId: string | null;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface WalletSummary {
+  balance: string;
+  transactions: WalletTransaction[];
+}
+
+export interface PlatformSettings {
+  id: number;
+  referralDivisor: number;
+  extraBottlePricePerUnit: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type UpdateSettingsInput = Partial<{ referralDivisor: number; extraBottlePricePerUnit: number }>;
+
+export interface ReferralLeaderboardRow {
+  id: string;
+  name: string | null;
+  mobile: string;
+  referralCode: string;
+  referredCount: number;
+  walletBalance: string;
+  totalBonusEarned: string;
+}
+
+export type ExtraBottleOrderStatus = 'pending_payment' | 'paid' | 'failed' | 'cancelled';
+
+export interface AdminExtraBottleOrder {
+  id: string;
+  quantity: number;
+  unitPrice: string;
+  totalAmount: string;
+  status: ExtraBottleOrderStatus;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string | null;
+    mobile: string;
+  };
+}
+
+export interface AdminAuditLog {
+  id: string;
+  actor: string;
+  action: string;
+  targetType: string | null;
+  targetId: string | null;
+  details: unknown;
+  createdAt: string;
+}

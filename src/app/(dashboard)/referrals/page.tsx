@@ -1,38 +1,68 @@
+import { api, ApiError } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
+import { ErrorBanner } from '@/components/ErrorBanner';
+import { EmptyState } from '@/components/EmptyState';
 import { StatCard } from '@/components/StatCard';
-import { DemoDataNotice } from '@/components/DemoDataNotice';
 import { DataTable } from '@/components/DataTable';
-import { ReferralStatusBadge } from '@/components/StatusBadge';
-import { MOCK_REFERRALS } from '@/lib/mockData';
+import { formatCurrency } from '@/lib/format';
 
-export default function ReferralsPage() {
-  const rewarded = MOCK_REFERRALS.filter((r) => r.status === 'rewarded').length;
-  const pending = MOCK_REFERRALS.filter((r) => r.status === 'pending').length;
-  const conversionRate = Math.round((rewarded / (MOCK_REFERRALS.length || 1)) * 100);
+export default async function ReferralsPage() {
+  let leaderboard;
+  try {
+    leaderboard = await api.listReferrals();
+  } catch (err) {
+    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    return (
+      <>
+        <PageHeader title="Referrals" />
+        <ErrorBanner message={message} />
+      </>
+    );
+  }
+
+  const activeReferrers = leaderboard.filter((r) => r.referredCount > 0).length;
+  const totalReferred = leaderboard.reduce((sum, r) => sum + r.referredCount, 0);
+  const totalBonusPaid = leaderboard.reduce((sum, r) => sum + Number(r.totalBonusEarned), 0);
+
+  const rows = [...leaderboard].sort((a, b) => b.referredCount - a.referredCount);
 
   return (
     <>
-      <PageHeader title="Referrals" description="Customer referral codes and rewards." />
-      <DemoDataNotice />
+      <PageHeader
+        title="Referrals"
+        description="Every user's referral code, how many people they've referred, and how much referral-bonus money it's earned them. Set the referral divisor (and the referral cap it implies) under Plans."
+      />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Total referrals" value={MOCK_REFERRALS.length} tone="blue" />
-        <StatCard label="Rewarded" value={rewarded} tone="green" />
-        <StatCard label="Pending" value={pending} tone="amber" />
-        <StatCard label="Conversion rate" value={`${conversionRate}%`} tone="slate" />
+        <StatCard label="Users" value={leaderboard.length} tone="blue" />
+        <StatCard label="Active referrers" value={activeReferrers} tone="green" />
+        <StatCard label="Total referred signups" value={totalReferred} tone="slate" />
+        <StatCard label="Total bonus paid" value={formatCurrency(String(totalBonusPaid))} tone="amber" />
       </div>
 
       <div className="mt-8">
-        <DataTable
-          columns={[
-            { header: 'Referrer', cell: (r) => <span className="font-medium text-(--color-text)">{r.referrerName}</span> },
-            { header: 'Code', cell: (r) => <span className="font-mono text-xs">{r.code}</span> },
-            { header: 'Referred', cell: (r) => r.referredName },
-            { header: 'Reward', cell: (r) => r.reward },
-            { header: 'Status', cell: (r) => <ReferralStatusBadge status={r.status} /> },
-          ]}
-          rows={MOCK_REFERRALS}
-        />
+        {rows.length === 0 ? (
+          <EmptyState title="No users yet" />
+        ) : (
+          <DataTable
+            columns={[
+              {
+                header: 'User',
+                cell: (r) => (
+                  <div>
+                    <div className="font-medium text-(--color-text)">{r.name ?? r.mobile}</div>
+                    <div className="text-xs text-(--color-text-muted)">{r.mobile}</div>
+                  </div>
+                ),
+              },
+              { header: 'Code', cell: (r) => <span className="font-mono text-xs">{r.referralCode}</span> },
+              { header: 'Referred', cell: (r) => r.referredCount },
+              { header: 'Wallet balance', cell: (r) => formatCurrency(r.walletBalance) },
+              { header: 'Total bonus earned', cell: (r) => formatCurrency(r.totalBonusEarned) },
+            ]}
+            rows={rows}
+          />
+        )}
       </div>
     </>
   );

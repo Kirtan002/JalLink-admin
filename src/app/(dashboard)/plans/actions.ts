@@ -9,6 +9,11 @@ export interface PlanFormState {
   success?: boolean;
 }
 
+export interface SettingsFormState {
+  error?: string;
+  success?: boolean;
+}
+
 function parsePlanForm(
   formData: FormData,
 ): { name: string; durationDays: number; bottleSizeLtr: number; price: number } | { error: string } {
@@ -24,8 +29,8 @@ function parsePlanForm(
   if (!Number.isInteger(bottleSizeLtr) || bottleSizeLtr <= 0) {
     return { error: 'Bottle size must be a positive whole number' };
   }
-  if (!Number.isFinite(price) || price <= 0) {
-    return { error: 'Price must be a positive number' };
+  if (!Number.isInteger(price) || price <= 0) {
+    return { error: 'Price must be a positive whole number of rupees' };
   }
 
   return { name, durationDays, bottleSizeLtr, price };
@@ -87,6 +92,32 @@ export async function deletePlan(id: string): Promise<PlanFormState> {
     await api.deletePlan(id);
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : 'Failed to delete plan' };
+  }
+
+  revalidatePath('/plans');
+  return { success: true };
+}
+
+export async function updateSettings(
+  _prevState: SettingsFormState,
+  formData: FormData,
+): Promise<SettingsFormState> {
+  await requireSession();
+
+  const referralDivisor = Number(formData.get('referralDivisor'));
+  const extraBottlePricePerUnit = Number(formData.get('extraBottlePricePerUnit'));
+
+  if (!Number.isInteger(referralDivisor) || referralDivisor <= 0) {
+    return { error: 'Referral divisor must be a positive whole number' };
+  }
+  if (!Number.isFinite(extraBottlePricePerUnit) || extraBottlePricePerUnit <= 0) {
+    return { error: 'Extra bottle price must be a positive number' };
+  }
+
+  try {
+    await api.updateSettings({ referralDivisor, extraBottlePricePerUnit });
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : 'Failed to update settings' };
   }
 
   revalidatePath('/plans');
