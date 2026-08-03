@@ -1,4 +1,4 @@
-export type SubscriptionStatus = 'active' | 'cancelled' | 'completed';
+export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'completed';
 export type SubscriptionFrequency = 'daily' | 'alternate_days';
 export type DeliveryStatus = 'scheduled' | 'delivered' | 'skipped' | 'cancelled';
 export type DeliveryPartnerKycStatus = 'pending' | 'active' | 'suspended' | 'rejected';
@@ -42,6 +42,7 @@ export interface AdminSubscription {
   endDate: string;
   status: SubscriptionStatus;
   cancelledAt: string | null;
+  pausedAt: string | null;
   createdAt: string;
   updatedAt: string;
   user: {
@@ -124,15 +125,31 @@ export interface WalletSummary {
   transactions: WalletTransaction[];
 }
 
+export type RazorpayMode = 'test' | 'live';
+
+/** From the public GET /payments/config — derived server-side from the Razorpay key prefix. */
+export interface PaymentConfig {
+  mode: RazorpayMode;
+  keyId: string;
+}
+
 export interface PlatformSettings {
   id: number;
   referralDivisor: number;
   extraBottlePricePerUnit: string | null;
+  supportMobile: string | null;
+  supportEmail: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export type UpdateSettingsInput = Partial<{ referralDivisor: number; extraBottlePricePerUnit: number }>;
+export type UpdateSettingsInput = Partial<{
+  referralDivisor: number;
+  extraBottlePricePerUnit: number;
+  /** '' clears the stored value. */
+  supportMobile: string;
+  supportEmail: string;
+}>;
 
 export interface ReferralLeaderboardRow {
   id: string;

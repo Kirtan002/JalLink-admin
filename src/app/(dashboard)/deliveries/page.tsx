@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/StatCard';
 import { DemoDataNotice } from '@/components/DemoDataNotice';
@@ -18,22 +19,42 @@ export default function DeliveriesPage() {
       <DemoDataNotice />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Scheduled" value={scheduled} tone="blue" />
-        <StatCard label="Delivered" value={delivered} tone="green" />
+        <StatCard label="Scheduled" value={scheduled} tone="blue" href="/subscriptions?status=active" />
+        <StatCard label="Delivered" value={delivered} tone="green" href="/subscriptions?status=completed" />
         <StatCard label="Skipped" value={skipped} tone="amber" />
-        <StatCard label="Cancelled" value={cancelled} tone="slate" />
+        <StatCard label="Cancelled" value={cancelled} tone="slate" href="/subscriptions?status=cancelled" />
       </div>
 
       <div className="mt-8">
         <DataTable
           columns={[
             { header: 'Delivery', cell: (d) => <span className="font-medium text-(--color-text)">{d.id}</span> },
-            { header: 'Customer', cell: (d) => d.customerName },
-            { header: 'Plan', cell: (d) => d.planName },
+            {
+              header: 'Customer',
+              cell: (d) => (
+                <Link href="/users" className="hover:underline">
+                  {d.customerName}
+                </Link>
+              ),
+            },
+            {
+              header: 'Plan',
+              cell: (d) => (
+                <Link href="/plans" className="hover:underline">
+                  {d.planName}
+                </Link>
+              ),
+            },
             {
               header: 'Delivery partner',
               cell: (d) =>
-                d.partnerName ?? <span className="text-(--color-text-muted) italic">Unassigned</span>,
+                d.partnerName ? (
+                  <Link href="/delivery-partners" className="hover:underline">
+                    {d.partnerName}
+                  </Link>
+                ) : (
+                  <span className="text-(--color-text-muted) italic">Unassigned</span>
+                ),
             },
             { header: 'Status', cell: (d) => <DeliveryStatusBadge status={d.status} /> },
             {

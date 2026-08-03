@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -5,6 +6,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { StatCard } from '@/components/StatCard';
 import { DataTable } from '@/components/DataTable';
 import { ExtraBottleOrderStatusBadge } from '@/components/StatusBadge';
+import { UserLink } from '@/components/UserLink';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 
 export default async function ExtraBottleOrdersPage() {
@@ -31,14 +33,22 @@ export default async function ExtraBottleOrdersPage() {
     <>
       <PageHeader
         title="Extra Bottle Orders"
-        description="One-off bottle orders placed by users with an active subscription — priced at the flat rate set under Plans."
+        description={
+          <>
+            One-off bottle orders placed by users with an active subscription — priced at the flat rate set under{' '}
+            <Link href="/plans" className="font-medium text-(--color-brand-blue-dark) hover:underline">
+              Plans
+            </Link>
+            .
+          </>
+        }
       />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="Orders" value={orders.length} tone="blue" />
-        <StatCard label="Paid" value={paid} tone="green" />
+        <StatCard label="Paid" value={paid} tone="green" href="/payments" />
         <StatCard label="Bottles ordered" value={totalBottles} tone="slate" />
-        <StatCard label="Revenue" value={formatCurrency(String(totalRevenue))} tone="amber" />
+        <StatCard label="Revenue" value={formatCurrency(String(totalRevenue))} tone="amber" href="/payments" />
       </div>
 
       <div className="mt-8">
@@ -47,15 +57,7 @@ export default async function ExtraBottleOrdersPage() {
         ) : (
           <DataTable
             columns={[
-              {
-                header: 'Customer',
-                cell: (o) => (
-                  <div>
-                    <div className="font-medium text-(--color-text)">{o.user.name ?? o.user.mobile}</div>
-                    <div className="text-xs text-(--color-text-muted)">{o.user.mobile}</div>
-                  </div>
-                ),
-              },
+              { header: 'Customer', cell: (o) => <UserLink user={o.user} /> },
               { header: 'Quantity', cell: (o) => o.quantity },
               { header: 'Unit price', cell: (o) => formatCurrency(o.unitPrice) },
               { header: 'Total', cell: (o) => formatCurrency(o.totalAmount) },

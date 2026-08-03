@@ -9,6 +9,7 @@ import type {
   PaymentPurpose,
   PaymentStatus,
   Plan,
+  PaymentConfig,
   PlatformSettings,
   ReferralLeaderboardRow,
   SubscriptionStatus,
@@ -130,4 +131,7 @@ export const api = {
   listExtraBottleOrders: () => apiFetch<AdminExtraBottleOrder[]>('/admin/extra-bottle-orders'),
 
   listAuditLogs: () => apiFetch<AdminAuditLog[]>('/admin/logs'),
+
+  /** Public endpoint — tells us whether the API is pointed at Razorpay test or live keys. */
+  getPaymentConfig: () => apiFetch<PaymentConfig>('/payments/config'),
 };

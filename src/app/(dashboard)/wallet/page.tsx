@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -38,12 +39,24 @@ export default async function WalletPage() {
     <>
       <PageHeader
         title="Wallet"
-        description="The platform's own wallet — receives a share of every subscription purchase from a user with no referrer. Admin can withdraw; regular users never can."
+        description={
+          <>
+            The platform&apos;s own wallet — receives a share of every{' '}
+            <Link href="/payments" className="font-medium text-(--color-brand-blue-dark) hover:underline">
+              subscription purchase
+            </Link>{' '}
+            from a user with no{' '}
+            <Link href="/referrals" className="font-medium text-(--color-brand-blue-dark) hover:underline">
+              referrer
+            </Link>
+            . Admin can withdraw; regular users never can.
+          </>
+        }
       />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="Current balance" value={formatCurrency(wallet.balance)} tone="blue" />
-        <StatCard label="Total credited" value={formatCurrency(String(credited))} tone="green" />
+        <StatCard label="Total credited" value={formatCurrency(String(credited))} tone="green" href="/payments" />
         <StatCard label="Total withdrawn" value={formatCurrency(String(debited))} tone="slate" />
         <StatCard label="Transactions" value={wallet.transactions.length} tone="amber" />
       </div>

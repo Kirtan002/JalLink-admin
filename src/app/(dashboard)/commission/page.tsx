@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/StatCard';
 import { DemoDataNotice } from '@/components/DemoDataNotice';
@@ -13,13 +14,29 @@ export default function CommissionPage() {
 
   return (
     <>
-      <PageHeader title="Commission" description="Commission tiers applied to delivery partner payouts." />
+      <PageHeader
+        title="Commission"
+        description={
+          <>
+            Commission tiers applied to{' '}
+            <Link href="/delivery-partners" className="font-medium text-(--color-brand-blue-dark) hover:underline">
+              delivery partner
+            </Link>{' '}
+            payouts.
+          </>
+        }
+      />
       <DemoDataNotice />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="Active tiers" value={activeTiers.length} tone="blue" />
         <StatCard label="Avg. commission rate" value={`${avgRate.toFixed(1)}%`} tone="green" />
-        <StatCard label="Partners earning commission" value={totalPartners} tone="slate" />
+        <StatCard
+          label="Partners earning commission"
+          value={totalPartners}
+          tone="slate"
+          href="/delivery-partners"
+        />
         <StatCard label="Highest tier rate" value={`${Math.max(...activeTiers.map((t) => t.ratePercent))}%`} tone="amber" />
       </div>
 

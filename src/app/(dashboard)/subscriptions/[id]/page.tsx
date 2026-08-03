@@ -45,14 +45,28 @@ export default async function SubscriptionDetailPage({
 
       <PageHeader
         title={subscription.user.name ?? 'Unnamed customer'}
-        description={subscription.user.mobile}
+        description={
+          <>
+            {subscription.user.mobile} ·{' '}
+            <Link
+              href={`/users/${subscription.user.id}`}
+              className="font-medium text-(--color-brand-blue-dark) hover:underline"
+            >
+              View user profile →
+            </Link>
+          </>
+        }
         action={<SubscriptionStatusBadge status={subscription.status} />}
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card title="Plan & billing">
           <dl className="flex flex-col gap-3 text-sm">
-            <Row label="Plan">{subscription.plan.name}</Row>
+            <Row label="Plan">
+              <Link href="/plans" className="hover:underline">
+                {subscription.plan.name}
+              </Link>
+            </Row>
             <Row label="Price">{formatCurrency(subscription.plan.price)}</Row>
             <Row label="Frequency">{formatFrequency(subscription.frequency)}</Row>
             <Row label="Bottles">
@@ -78,11 +92,18 @@ export default async function SubscriptionDetailPage({
             partners={partners}
             currentPartnerId={subscription.deliveryPartner?.id ?? null}
           />
+          <Link
+            href="/delivery-partners"
+            className="mt-4 inline-block text-sm font-medium text-(--color-brand-blue-dark) hover:underline"
+          >
+            Manage delivery partners →
+          </Link>
         </Card>
 
         <Card title="Timeline">
           <dl className="flex flex-col gap-3 text-sm">
             <Row label="Created">{formatDate(subscription.createdAt)}</Row>
+            {subscription.pausedAt && <Row label="Paused">{formatDate(subscription.pausedAt)}</Row>}
             {subscription.cancelledAt && <Row label="Cancelled">{formatDate(subscription.cancelledAt)}</Row>}
           </dl>
         </Card>
@@ -90,6 +111,12 @@ export default async function SubscriptionDetailPage({
 
       <div className="mt-6">
         <Card title={`Delivery calendar (${deliveries.length})`}>
+          <Link
+            href="/deliveries"
+            className="mb-3 inline-block text-sm font-medium text-(--color-brand-blue-dark) hover:underline"
+          >
+            All deliveries →
+          </Link>
           <div className="max-h-[420px] overflow-y-auto rounded-lg border border-(--color-border)">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-(--color-surface-muted)">

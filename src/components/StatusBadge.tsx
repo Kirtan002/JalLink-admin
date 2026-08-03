@@ -12,8 +12,9 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-const SUBSCRIPTION_STATUS_TONE: Record<SubscriptionStatus, 'green' | 'slate' | 'blue'> = {
+const SUBSCRIPTION_STATUS_TONE: Record<SubscriptionStatus, 'green' | 'slate' | 'blue' | 'amber'> = {
   active: 'green',
+  paused: 'amber',
   cancelled: 'slate',
   completed: 'blue',
 };

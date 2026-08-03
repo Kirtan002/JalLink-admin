@@ -6,17 +6,19 @@ import { ErrorBanner } from '@/components/ErrorBanner';
 import { EmptyState } from '@/components/EmptyState';
 import { Badge } from '@/components/Badge';
 import { SubscriptionStatusBadge } from '@/components/StatusBadge';
+import { UserLink } from '@/components/UserLink';
 import { formatDate, formatFrequency } from '@/lib/format';
 
 const TABS: { label: string; value?: SubscriptionStatus }[] = [
   { label: 'All' },
   { label: 'Active', value: 'active' },
+  { label: 'Paused', value: 'paused' },
   { label: 'Cancelled', value: 'cancelled' },
   { label: 'Completed', value: 'completed' },
 ];
 
 function isSubscriptionStatus(value: string | undefined): value is SubscriptionStatus {
-  return value === 'active' || value === 'cancelled' || value === 'completed';
+  return TABS.some((tab) => tab.value !== undefined && tab.value === value);
 }
 
 export default async function SubscriptionsPage({
@@ -85,10 +87,13 @@ export default async function SubscriptionsPage({
               {subscriptions.map((s) => (
                 <tr key={s.id} className="border-b border-(--color-border) last:border-0">
                   <td className="px-5 py-3">
-                    <div className="font-medium text-(--color-text)">{s.user.name ?? 'Unnamed customer'}</div>
-                    <div className="text-xs text-(--color-text-muted)">{s.user.mobile}</div>
+                    <UserLink user={s.user} />
                   </td>
-                  <td className="px-5 py-3">{s.plan.name}</td>
+                  <td className="px-5 py-3">
+                    <Link href="/plans" className="hover:underline">
+                      {s.plan.name}
+                    </Link>
+                  </td>
                   <td className="px-5 py-3">{formatFrequency(s.frequency)}</td>
                   <td className="px-5 py-3">
                     {s.totalBottles} × {s.bottleSizeLtr}L
@@ -101,7 +106,9 @@ export default async function SubscriptionsPage({
                   </td>
                   <td className="px-5 py-3">
                     {s.deliveryPartner ? (
-                      s.deliveryPartner.name
+                      <Link href="/delivery-partners" className="hover:underline">
+                        {s.deliveryPartner.name}
+                      </Link>
                     ) : (
                       <Badge tone="amber">Unassigned</Badge>
                     )}

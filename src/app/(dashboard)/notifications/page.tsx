@@ -17,7 +17,7 @@ export default function NotificationsPage() {
       <DemoDataNotice />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Sent" value={totalSent} tone="blue" />
+        <StatCard label="Sent" value={totalSent} tone="blue" href="/users" />
         <StatCard label="Delivery rate" value={`${deliveryRate}%`} tone="green" />
         <StatCard label="Campaigns" value={MOCK_NOTIFICATIONS.length} tone="slate" />
         <StatCard label="Failed campaigns" value={failed} tone="amber" />

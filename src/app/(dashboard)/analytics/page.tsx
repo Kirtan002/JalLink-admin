@@ -11,10 +11,10 @@ export default function AnalyticsPage() {
       <DemoDataNotice />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Active subscribers" value="412" tone="green" />
-        <StatCard label="New signups (7d)" value="34" tone="blue" />
-        <StatCard label="Skipped delivery rate" value="3.1%" tone="amber" />
-        <StatCard label="Avg. delivery time" value="18 min" tone="slate" />
+        <StatCard label="Active subscribers" value="412" tone="green" href="/subscriptions?status=active" />
+        <StatCard label="New signups (7d)" value="34" tone="blue" href="/users" />
+        <StatCard label="Skipped delivery rate" value="3.1%" tone="amber" href="/deliveries" />
+        <StatCard label="Avg. delivery time" value="18 min" tone="slate" href="/deliveries" />
       </div>
 
       <div className="mt-8">

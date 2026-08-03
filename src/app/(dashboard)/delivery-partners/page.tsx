@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -28,7 +29,20 @@ export default async function DeliveryPartnersPage() {
     <>
       <PageHeader
         title="Delivery Partners"
-        description="Assigned to a subscription from the start — the same partner handles every delivery for that subscription. Wallets have no earning logic yet (commissions are future scope) — withdraw is wired up and ready for when they do."
+        description={
+          <>
+            Assigned to a{' '}
+            <Link href="/subscriptions" className="font-medium text-(--color-brand-blue-dark) hover:underline">
+              subscription
+            </Link>{' '}
+            from the start — the same partner handles every delivery for that subscription. Wallets have no earning
+            logic yet (
+            <Link href="/commission" className="font-medium text-(--color-brand-blue-dark) hover:underline">
+              commissions
+            </Link>{' '}
+            are future scope) — withdraw is wired up and ready for when they do.
+          </>
+        }
       />
 
       <Card className="mb-8">

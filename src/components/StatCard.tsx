@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 type StatTone = 'blue' | 'green' | 'slate' | 'amber';
 
 const TONE_CLASSES: Record<StatTone, string> = {
@@ -7,19 +9,44 @@ const TONE_CLASSES: Record<StatTone, string> = {
   amber: 'text-amber-600 dark:text-amber-400',
 };
 
+const BASE_CLASSES = 'rounded-2xl border border-(--color-border) bg-(--color-surface) p-5 shadow-sm';
+
 export function StatCard({
   label,
   value,
   tone = 'blue',
+  href,
 }: {
   label: string;
   value: string | number;
   tone?: StatTone;
+  /** When set, the whole tile becomes a link to the page this number came from. */
+  href?: string;
 }) {
-  return (
-    <div className="rounded-2xl border border-(--color-border) bg-(--color-surface) p-5 shadow-sm">
-      <p className="text-sm text-(--color-text-muted)">{label}</p>
+  const body = (
+    <>
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-sm text-(--color-text-muted)">{label}</p>
+        {href && (
+          <span aria-hidden="true" className="text-(--color-text-muted) opacity-0 transition group-hover:opacity-100">
+            →
+          </span>
+        )}
+      </div>
       <p className={`mt-2 text-3xl font-semibold ${TONE_CLASSES[tone]}`}>{value}</p>
-    </div>
+    </>
+  );
+
+  if (!href) {
+    return <div className={BASE_CLASSES}>{body}</div>;
+  }
+
+  return (
+    <Link
+      href={href}
+      className={`${BASE_CLASSES} group block transition hover:-translate-y-0.5 hover:border-(--color-brand-blue) hover:shadow-md`}
+    >
+      {body}
+    </Link>
   );
 }

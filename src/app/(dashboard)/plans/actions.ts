@@ -114,6 +114,8 @@ export async function updateSettings(
     return { error: 'Extra bottle price must be a positive number' };
   }
 
+  // Only these two fields — support contact is edited on /settings by its own action, and
+  // PATCH /admin/settings is partial, so neither form clobbers the other's values.
   try {
     await api.updateSettings({ referralDivisor, extraBottlePricePerUnit });
   } catch (err) {

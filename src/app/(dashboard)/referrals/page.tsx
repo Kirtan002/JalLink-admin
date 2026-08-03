@@ -1,9 +1,11 @@
+import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
 import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { EmptyState } from '@/components/EmptyState';
 import { StatCard } from '@/components/StatCard';
 import { DataTable } from '@/components/DataTable';
+import { UserLink } from '@/components/UserLink';
 import { formatCurrency } from '@/lib/format';
 
 export default async function ReferralsPage() {
@@ -30,14 +32,23 @@ export default async function ReferralsPage() {
     <>
       <PageHeader
         title="Referrals"
-        description="Every user's referral code, how many people they've referred, and how much referral-bonus money it's earned them. Set the referral divisor (and the referral cap it implies) under Plans."
+        description={
+          <>
+            Every user&apos;s referral code, how many people they&apos;ve referred, and how much referral-bonus money
+            it&apos;s earned them. Set the referral divisor (and the referral cap it implies) under{' '}
+            <Link href="/plans" className="font-medium text-(--color-brand-blue-dark) hover:underline">
+              Plans
+            </Link>
+            .
+          </>
+        }
       />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Users" value={leaderboard.length} tone="blue" />
+        <StatCard label="Users" value={leaderboard.length} tone="blue" href="/users" />
         <StatCard label="Active referrers" value={activeReferrers} tone="green" />
         <StatCard label="Total referred signups" value={totalReferred} tone="slate" />
-        <StatCard label="Total bonus paid" value={formatCurrency(String(totalBonusPaid))} tone="amber" />
+        <StatCard label="Total bonus paid" value={formatCurrency(String(totalBonusPaid))} tone="amber" href="/wallet" />
       </div>
 
       <div className="mt-8">
@@ -46,19 +57,23 @@ export default async function ReferralsPage() {
         ) : (
           <DataTable
             columns={[
-              {
-                header: 'User',
-                cell: (r) => (
-                  <div>
-                    <div className="font-medium text-(--color-text)">{r.name ?? r.mobile}</div>
-                    <div className="text-xs text-(--color-text-muted)">{r.mobile}</div>
-                  </div>
-                ),
-              },
+              { header: 'User', cell: (r) => <UserLink user={r} /> },
               { header: 'Code', cell: (r) => <span className="font-mono text-xs">{r.referralCode}</span> },
               { header: 'Referred', cell: (r) => r.referredCount },
               { header: 'Wallet balance', cell: (r) => formatCurrency(r.walletBalance) },
               { header: 'Total bonus earned', cell: (r) => formatCurrency(r.totalBonusEarned) },
+              {
+                header: '',
+                align: 'right',
+                cell: (r) => (
+                  <Link
+                    href={`/users/${r.id}`}
+                    className="font-medium text-(--color-brand-blue-dark) hover:underline"
+                  >
+                    View
+                  </Link>
+                ),
+              },
             ]}
             rows={rows}
           />

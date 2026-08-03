@@ -6,6 +6,8 @@ import { StatCard } from '@/components/StatCard';
 import { DataTable } from '@/components/DataTable';
 import { Badge } from '@/components/Badge';
 import { PaymentStatusBadge } from '@/components/StatusBadge';
+import { UserLink } from '@/components/UserLink';
+import { PaymentModeBanner } from '@/components/PaymentModeBanner';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 
 export default async function PaymentsPage() {
@@ -29,6 +31,7 @@ export default async function PaymentsPage() {
   return (
     <>
       <PageHeader title="Payments" description="Every subscription and extra-bottle payment, across all users." />
+      <PaymentModeBanner />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="Total" value={payments.length} tone="blue" />
@@ -43,15 +46,7 @@ export default async function PaymentsPage() {
         ) : (
           <DataTable
             columns={[
-              {
-                header: 'Customer',
-                cell: (p) => (
-                  <div>
-                    <div className="font-medium text-(--color-text)">{p.user.name ?? p.user.mobile}</div>
-                    <div className="text-xs text-(--color-text-muted)">{p.user.mobile}</div>
-                  </div>
-                ),
-              },
+              { header: 'Customer', cell: (p) => <UserLink user={p.user} /> },
               {
                 header: 'Purpose',
                 cell: (p) => (
