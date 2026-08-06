@@ -7,16 +7,19 @@ import { StatCard } from '@/components/StatCard';
 import { DataTable } from '@/components/DataTable';
 import { UserLink } from '@/components/UserLink';
 import { formatCurrency } from '@/lib/format';
+import { getDictionary } from '@/lib/i18n/server';
 
 export default async function ReferralsPage() {
+  const t = await getDictionary();
+
   let leaderboard;
   try {
     leaderboard = await api.listReferrals();
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="Referrals" />
+        <PageHeader title={t.referrals.title} />
         <ErrorBanner message={message} />
       </>
     );
@@ -31,37 +34,41 @@ export default async function ReferralsPage() {
   return (
     <>
       <PageHeader
-        title="Referrals"
+        title={t.referrals.title}
         description={
           <>
-            Every user&apos;s referral code, how many people they&apos;ve referred, and how much referral-bonus money
-            it&apos;s earned them. Set the referral divisor (and the referral cap it implies) under{' '}
+            {t.referrals.descriptionBefore}
             <Link href="/plans" className="font-medium text-(--color-brand-blue-dark) hover:underline">
-              Plans
+              {t.referrals.descriptionLink}
             </Link>
-            .
+            {t.referrals.descriptionAfter}
           </>
         }
       />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Users" value={leaderboard.length} tone="blue" href="/users" />
-        <StatCard label="Active referrers" value={activeReferrers} tone="green" />
-        <StatCard label="Total referred signups" value={totalReferred} tone="slate" />
-        <StatCard label="Total bonus paid" value={formatCurrency(String(totalBonusPaid))} tone="amber" href="/wallet" />
+        <StatCard label={t.referrals.users} value={leaderboard.length} tone="blue" href="/users" />
+        <StatCard label={t.referrals.activeReferrers} value={activeReferrers} tone="green" />
+        <StatCard label={t.referrals.totalReferred} value={totalReferred} tone="slate" />
+        <StatCard
+          label={t.referrals.totalBonusPaid}
+          value={formatCurrency(String(totalBonusPaid))}
+          tone="amber"
+          href="/wallet"
+        />
       </div>
 
       <div className="mt-8">
         {rows.length === 0 ? (
-          <EmptyState title="No users yet" />
+          <EmptyState title={t.referrals.empty} />
         ) : (
           <DataTable
             columns={[
-              { header: 'User', cell: (r) => <UserLink user={r} /> },
-              { header: 'Code', cell: (r) => <span className="font-mono text-xs">{r.referralCode}</span> },
-              { header: 'Referred', cell: (r) => r.referredCount },
-              { header: 'Wallet balance', cell: (r) => formatCurrency(r.walletBalance) },
-              { header: 'Total bonus earned', cell: (r) => formatCurrency(r.totalBonusEarned) },
+              { header: t.users.user, cell: (r) => <UserLink user={r} /> },
+              { header: t.referrals.code, cell: (r) => <span className="font-mono text-xs">{r.referralCode}</span> },
+              { header: t.referrals.referred, cell: (r) => r.referredCount },
+              { header: t.referrals.walletBalance, cell: (r) => formatCurrency(r.walletBalance) },
+              { header: t.referrals.totalBonusEarned, cell: (r) => formatCurrency(r.totalBonusEarned) },
               {
                 header: '',
                 align: 'right',
@@ -70,7 +77,7 @@ export default async function ReferralsPage() {
                     href={`/users/${r.id}`}
                     className="font-medium text-(--color-brand-blue-dark) hover:underline"
                   >
-                    View
+                    {t.common.view}
                   </Link>
                 ),
               },

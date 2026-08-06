@@ -1,4 +1,10 @@
+'use client';
+
+import { useTranslations } from '@/lib/i18n/client';
+
 export function Logo({ className = '' }: { className?: string }) {
+  const t = useTranslations();
+
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -14,7 +20,7 @@ export function Logo({ className = '' }: { className?: string }) {
         />
       </svg>
       <span className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-        JalLink <span className="brand-gradient-text">Admin</span>
+        JalLink <span className="brand-gradient-text">{t.app.logoSuffix}</span>
       </span>
     </div>
   );

@@ -6,17 +6,20 @@ import { Card } from '@/components/Card';
 import { CreatePlanForm } from './create-plan-form';
 import { PlansTable } from './plans-table';
 import { SettingsForm } from './settings-form';
+import { getDictionary } from '@/lib/i18n/server';
 
 export default async function PlansPage() {
+  const t = await getDictionary();
+
   let plans;
   let settings;
   try {
     [plans, settings] = await Promise.all([api.listAdminPlans(), api.getSettings()]);
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="Plans" />
+        <PageHeader title={t.plans.title} />
         <ErrorBanner message={message} />
       </>
     );
@@ -25,30 +28,29 @@ export default async function PlansPage() {
   return (
     <>
       <PageHeader
-        title="Plans"
+        title={t.plans.title}
         description={
           <>
-            Create and manage the subscription plans customers can purchase. Deactivating a plan hides it from
-            checkout without affecting{' '}
+            {t.plans.descriptionBefore}
             <Link href="/subscriptions" className="font-medium text-(--color-brand-blue-dark) hover:underline">
-              existing subscriptions
+              {t.plans.descriptionLink}
             </Link>
-            .
+            {t.plans.descriptionAfter}
           </>
         }
       />
 
-      <Card title="Referral & pricing settings" className="mb-8">
+      <Card title={t.plans.referralPricing} className="mb-8">
         <SettingsForm settings={settings} />
         <div className="mt-4 flex flex-wrap gap-4 border-t border-(--color-border) pt-4 text-sm">
           <Link href="/referrals" className="font-medium text-(--color-brand-blue-dark) hover:underline">
-            View referrals →
+            {t.plans.viewReferrals}
           </Link>
           <Link href="/extra-bottle-orders" className="font-medium text-(--color-brand-blue-dark) hover:underline">
-            View extra-bottle orders →
+            {t.plans.viewExtraBottles}
           </Link>
           <Link href="/settings" className="font-medium text-(--color-brand-blue-dark) hover:underline">
-            Support contact →
+            {t.plans.supportContact}
           </Link>
         </div>
       </Card>

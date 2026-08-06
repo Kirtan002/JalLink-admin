@@ -3,11 +3,13 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { FormError, FormField, FormSubmit, formRowClass, inputClass } from '@/components/FormField';
 import { updateSettings, type SettingsFormState } from './actions';
+import { useTranslations } from '@/lib/i18n/client';
 import type { PlatformSettings } from '@/lib/types';
 
 const initialState: SettingsFormState = {};
 
 export function SettingsForm({ settings }: { settings: PlatformSettings }) {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(updateSettings, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -20,9 +22,9 @@ export function SettingsForm({ settings }: { settings: PlatformSettings }) {
   return (
     <form ref={formRef} action={formAction} className={formRowClass}>
       <FormField
-        label="Referral divisor"
+        label={t.plans.referralDivisor}
         htmlFor="referralDivisor"
-        hint="Every plan price must divide evenly by this. Also caps how many people a user can refer."
+        hint={t.plans.referralDivisorHint}
         className="max-w-md"
       >
         <input
@@ -36,9 +38,9 @@ export function SettingsForm({ settings }: { settings: PlatformSettings }) {
         />
       </FormField>
       <FormField
-        label="Extra bottle price (₹)"
+        label={t.plans.extraBottlePrice}
         htmlFor="extraBottlePricePerUnit"
-        hint="Flat rate per one-off extra bottle order."
+        hint={t.plans.extraBottlePriceHint}
       >
         <input
           id="extraBottlePricePerUnit"
@@ -47,12 +49,12 @@ export function SettingsForm({ settings }: { settings: PlatformSettings }) {
           min={0}
           step="0.01"
           defaultValue={settings.extraBottlePricePerUnit ?? ''}
-          placeholder="Not set"
+          placeholder={t.plans.notSet}
           required
           className={`w-36 ${inputClass}`}
         />
       </FormField>
-      <FormSubmit pending={pending} label="Save settings" pendingLabel="Saving…" />
+      <FormSubmit pending={pending} label={t.plans.saveSettings} pendingLabel={t.plans.saving} />
       <FormError message={state.error} />
     </form>
   );

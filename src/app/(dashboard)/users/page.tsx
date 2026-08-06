@@ -8,18 +8,22 @@ import { DataTable } from '@/components/DataTable';
 import { Badge } from '@/components/Badge';
 import { UserLink } from '@/components/UserLink';
 import { formatCurrency } from '@/lib/format';
+import { interpolate } from '@/lib/i18n/config';
+import { getDictionary } from '@/lib/i18n/server';
 
 export default async function UsersPage() {
+  const t = await getDictionary();
+
   // There's no /admin/users endpoint yet — the referral leaderboard is the one call that
   // returns every user, so it doubles as the directory until a dedicated endpoint exists.
   let users, subscriptions;
   try {
     [users, subscriptions] = await Promise.all([api.listReferrals(), api.listSubscriptions()]);
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="Users" description="Every customer on the platform." />
+        <PageHeader title={t.users.title} description={t.users.shortDescription} />
         <ErrorBanner message={message} />
       </>
     );
@@ -44,41 +48,45 @@ export default async function UsersPage() {
 
   return (
     <>
-      <PageHeader
-        title="Users"
-        description="Every customer on the platform. Open a user to see their subscriptions, payments, and extra-bottle orders in one place."
-      />
+      <PageHeader title={t.users.title} description={t.users.description} />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Total users" value={users.length} tone="blue" />
-        <StatCard label="With a subscription" value={subscriberCount} tone="slate" href="/subscriptions" />
+        <StatCard label={t.users.totalUsers} value={users.length} tone="blue" />
+        <StatCard label={t.users.withSubscription} value={subscriberCount} tone="slate" href="/subscriptions" />
         <StatCard
-          label="Currently subscribed"
+          label={t.users.currentlySubscribed}
           value={activeSubscriberCount}
           tone="green"
           href="/subscriptions?status=active"
         />
-        <StatCard label="Wallet balances" value={formatCurrency(String(totalWallet))} tone="amber" href="/referrals" />
+        <StatCard
+          label={t.users.walletBalances}
+          value={formatCurrency(String(totalWallet))}
+          tone="amber"
+          href="/referrals"
+        />
       </div>
 
       <div className="mt-8">
         {rows.length === 0 ? (
-          <EmptyState title="No users yet" description="Customers appear here as soon as they sign up." />
+          <EmptyState title={t.users.empty} description={t.users.emptyHint} />
         ) : (
           <DataTable
             columns={[
-              { header: 'User', cell: (u) => <UserLink user={u} /> },
+              { header: t.users.user, cell: (u) => <UserLink user={u} /> },
               {
-                header: 'Subscriptions',
+                header: t.nav.items.subscriptions,
                 cell: (u) => {
                   const counts = subsByUser.get(u.id);
-                  if (!counts) return <span className="text-(--color-text-muted)">None</span>;
+                  if (!counts) return <span className="text-(--color-text-muted)">{t.common.none}</span>;
                   return (
                     <Link href="/subscriptions" className="hover:underline">
-                      {counts.total} total
+                      {interpolate(t.users.subscriptionsCount, { count: counts.total })}
                       {counts.active > 0 && (
                         <span className="ml-2 align-middle">
-                          <Badge tone="green">{counts.active} active</Badge>
+                          <Badge tone="green">
+                            {interpolate(t.users.activeCount, { count: counts.active })}
+                          </Badge>
                         </span>
                       )}
                     </Link>
@@ -86,15 +94,15 @@ export default async function UsersPage() {
                 },
               },
               {
-                header: 'Referral code',
+                header: t.users.referralCode,
                 cell: (u) => (
                   <Link href="/referrals" className="font-mono text-xs hover:underline">
                     {u.referralCode}
                   </Link>
                 ),
               },
-              { header: 'Referred', cell: (u) => u.referredCount },
-              { header: 'Wallet balance', cell: (u) => formatCurrency(u.walletBalance) },
+              { header: t.users.referred, cell: (u) => u.referredCount },
+              { header: t.users.walletBalance, cell: (u) => formatCurrency(u.walletBalance) },
               {
                 header: '',
                 align: 'right',
@@ -103,7 +111,7 @@ export default async function UsersPage() {
                     href={`/users/${u.id}`}
                     className="font-medium text-(--color-brand-blue-dark) hover:underline"
                   >
-                    View
+                    {t.common.view}
                   </Link>
                 ),
               },

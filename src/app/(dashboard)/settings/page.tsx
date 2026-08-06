@@ -6,16 +6,20 @@ import { Card } from '@/components/Card';
 import { Badge } from '@/components/Badge';
 import { PaymentModeBanner } from '@/components/PaymentModeBanner';
 import { SupportForm } from './support-form';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { getDictionary } from '@/lib/i18n/server';
 
 export default async function SettingsPage() {
+  const t = await getDictionary();
+
   let settings;
   try {
     settings = await api.getSettings();
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="Settings" description="Platform-wide configuration." />
+        <PageHeader title={t.settings.title} description={t.settings.shortDescription} />
         <ErrorBanner message={message} />
       </>
     );
@@ -26,34 +30,40 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader
-        title="Settings"
-        description="Platform-wide configuration. Referral and pricing settings live under Plans."
+        title={t.settings.title}
+        description={t.settings.description}
         action={
-          configured ? <Badge tone="green">Support live</Badge> : <Badge tone="amber">Support not set</Badge>
+          configured ? (
+            <Badge tone="green">{t.settings.supportLive}</Badge>
+          ) : (
+            <Badge tone="amber">{t.settings.supportNotSet}</Badge>
+          )
         }
       />
 
       <PaymentModeBanner />
 
-      <Card title="Customer support contact" className="mb-8">
+      <Card title={t.settings.supportContact} className="mb-8">
         <p className="mb-5 text-sm text-(--color-text-muted)">
-          What the mobile app shows customers on its help screens. The app reads these from the public{' '}
-          <code className="rounded bg-(--color-surface-muted) px-1.5 py-0.5 font-mono text-xs">GET /support</code>{' '}
-          endpoint, which needs no login — so these also show on the OTP screen, when a customer can&apos;t sign
-          in. Clearing a field hides it in the app.
+          {t.settings.supportHintBefore}
+          <code className="rounded bg-(--color-surface-muted) px-1.5 py-0.5 font-mono text-xs">GET /support</code>
+          {t.settings.supportHintAfter}
         </p>
         <SupportForm settings={settings} />
       </Card>
 
-      <Card title="Referral & pricing">
-        <p className="text-sm text-(--color-text-muted)">
-          The referral divisor and the flat extra-bottle price are edited alongside the plans they apply to.
-        </p>
+      <Card title={t.settings.languageTitle} className="mb-8">
+        <p className="mb-4 text-sm text-(--color-text-muted)">{t.settings.languageHint}</p>
+        <LanguageSwitcher className="max-w-xs" />
+      </Card>
+
+      <Card title={t.settings.referralPricing}>
+        <p className="text-sm text-(--color-text-muted)">{t.settings.referralPricingHint}</p>
         <Link
           href="/plans"
           className="mt-3 inline-block text-sm font-medium text-(--color-brand-blue-dark) hover:underline"
         >
-          Edit under Plans →
+          {t.settings.editUnderPlans}
         </Link>
       </Card>
     </>

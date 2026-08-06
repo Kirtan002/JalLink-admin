@@ -3,10 +3,12 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { withdrawDeliveryPartnerWallet, type WithdrawPartnerWalletState } from './actions';
 import { formatCurrency } from '@/lib/format';
+import { useTranslations } from '@/lib/i18n/client';
 
 const initialState: WithdrawPartnerWalletState = {};
 
 export function PartnerWalletCell({ partnerId, balance }: { partnerId: string; balance: string }) {
+  const t = useTranslations();
   const boundAction = withdrawDeliveryPartnerWallet.bind(null, partnerId);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -26,7 +28,7 @@ export function PartnerWalletCell({ partnerId, balance }: { partnerId: string; b
           type="number"
           min={0.01}
           step="0.01"
-          placeholder="Amount"
+          placeholder={t.common.amount}
           className="w-20 rounded-md border border-(--color-border) bg-(--color-surface) px-2 py-1 text-xs outline-none focus:border-(--color-brand-blue)"
         />
         <button
@@ -34,7 +36,7 @@ export function PartnerWalletCell({ partnerId, balance }: { partnerId: string; b
           disabled={pending}
           className="text-xs font-medium text-(--color-brand-blue-dark) hover:underline disabled:opacity-60"
         >
-          {pending ? '…' : 'Withdraw'}
+          {pending ? '…' : t.deliveryPartners.withdraw}
         </button>
       </form>
       {state.error && <span className="text-xs text-red-600 dark:text-red-400">{state.error}</span>}

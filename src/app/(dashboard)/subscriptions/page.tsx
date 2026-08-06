@@ -5,16 +5,19 @@ import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { EmptyState } from '@/components/EmptyState';
 import { Badge } from '@/components/Badge';
+import { DataTable } from '@/components/DataTable';
 import { SubscriptionStatusBadge } from '@/components/StatusBadge';
 import { UserLink } from '@/components/UserLink';
 import { formatDate, formatFrequency } from '@/lib/format';
+import { getDictionary } from '@/lib/i18n/server';
+import type { Dictionary } from '@/lib/i18n/dictionaries';
 
-const TABS: { label: string; value?: SubscriptionStatus }[] = [
-  { label: 'All' },
-  { label: 'Active', value: 'active' },
-  { label: 'Paused', value: 'paused' },
-  { label: 'Cancelled', value: 'cancelled' },
-  { label: 'Completed', value: 'completed' },
+const TABS: { key: keyof Dictionary['status']['subscription'] | 'all'; value?: SubscriptionStatus }[] = [
+  { key: 'all' },
+  { key: 'active', value: 'active' },
+  { key: 'paused', value: 'paused' },
+  { key: 'cancelled', value: 'cancelled' },
+  { key: 'completed', value: 'completed' },
 ];
 
 function isSubscriptionStatus(value: string | undefined): value is SubscriptionStatus {
@@ -26,6 +29,7 @@ export default async function SubscriptionsPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  const t = await getDictionary();
   const { status: rawStatus } = await searchParams;
   const status = isSubscriptionStatus(rawStatus) ? rawStatus : undefined;
 
@@ -33,10 +37,10 @@ export default async function SubscriptionsPage({
   try {
     subscriptions = await api.listSubscriptions(status);
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="Subscriptions" description="All customer subscriptions across every plan." />
+        <PageHeader title={t.subscriptions.title} description={t.subscriptions.description} />
         <ErrorBanner message={message} />
       </>
     );
@@ -44,15 +48,15 @@ export default async function SubscriptionsPage({
 
   return (
     <>
-      <PageHeader title="Subscriptions" description="All customer subscriptions across every plan." />
+      <PageHeader title={t.subscriptions.title} description={t.subscriptions.description} />
 
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 flex flex-wrap gap-2">
         {TABS.map((tab) => {
           const isActive = tab.value === status;
           const href = tab.value ? `/subscriptions?status=${tab.value}` : '/subscriptions';
           return (
             <Link
-              key={tab.label}
+              key={tab.key}
               href={href}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
                 isActive
@@ -60,69 +64,66 @@ export default async function SubscriptionsPage({
                   : 'border border-(--color-border) text-(--color-text-muted) hover:bg-(--color-surface-muted)'
               }`}
             >
-              {tab.label}
+              {tab.key === 'all' ? t.common.all : t.status.subscription[tab.key]}
             </Link>
           );
         })}
       </div>
 
       {subscriptions.length === 0 ? (
-        <EmptyState title="No subscriptions found" description="Try a different filter, or check back once customers subscribe." />
+        <EmptyState title={t.subscriptions.empty} description={t.subscriptions.emptyHint} />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-(--color-border) bg-(--color-surface) shadow-sm">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-(--color-border) text-left text-xs tracking-wide text-(--color-text-muted) uppercase">
-                <th className="px-5 py-3 font-medium">Customer</th>
-                <th className="px-5 py-3 font-medium">Plan</th>
-                <th className="px-5 py-3 font-medium">Frequency</th>
-                <th className="px-5 py-3 font-medium">Bottles</th>
-                <th className="px-5 py-3 font-medium">Schedule</th>
-                <th className="px-5 py-3 font-medium">Status</th>
-                <th className="px-5 py-3 font-medium">Delivery partner</th>
-                <th className="px-5 py-3 font-medium" />
-              </tr>
-            </thead>
-            <tbody>
-              {subscriptions.map((s) => (
-                <tr key={s.id} className="border-b border-(--color-border) last:border-0">
-                  <td className="px-5 py-3">
-                    <UserLink user={s.user} />
-                  </td>
-                  <td className="px-5 py-3">
-                    <Link href="/plans" className="hover:underline">
-                      {s.plan.name}
-                    </Link>
-                  </td>
-                  <td className="px-5 py-3">{formatFrequency(s.frequency)}</td>
-                  <td className="px-5 py-3">
-                    {s.totalBottles} × {s.bottleSizeLtr}L
-                  </td>
-                  <td className="px-5 py-3 whitespace-nowrap text-(--color-text-muted)">
-                    {formatDate(s.startDate)} → {formatDate(s.endDate)}
-                  </td>
-                  <td className="px-5 py-3">
-                    <SubscriptionStatusBadge status={s.status} />
-                  </td>
-                  <td className="px-5 py-3">
-                    {s.deliveryPartner ? (
-                      <Link href="/delivery-partners" className="hover:underline">
-                        {s.deliveryPartner.name}
-                      </Link>
-                    ) : (
-                      <Badge tone="amber">Unassigned</Badge>
-                    )}
-                  </td>
-                  <td className="px-5 py-3 text-right">
-                    <Link href={`/subscriptions/${s.id}`} className="font-medium text-(--color-brand-blue-dark) hover:underline">
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          columns={[
+            { header: t.common.customer, cell: (s) => <UserLink user={s.user} /> },
+            {
+              header: t.common.plan,
+              cell: (s) => (
+                <Link href="/plans" className="hover:underline">
+                  {s.plan.name}
+                </Link>
+              ),
+            },
+            { header: t.common.frequency, cell: (s) => formatFrequency(s.frequency) },
+            {
+              header: t.subscriptions.bottles,
+              cell: (s) => `${s.totalBottles} × ${s.bottleSizeLtr}L`,
+            },
+            {
+              header: t.subscriptions.schedule,
+              cell: (s) => (
+                <span className="whitespace-nowrap text-(--color-text-muted)">
+                  {formatDate(s.startDate)} → {formatDate(s.endDate)}
+                </span>
+              ),
+            },
+            { header: t.common.status, cell: (s) => <SubscriptionStatusBadge status={s.status} /> },
+            {
+              header: t.subscriptions.deliveryPartner,
+              cell: (s) =>
+                s.deliveryPartner ? (
+                  <Link href={`/delivery-partners/${s.deliveryPartner.id}`} className="hover:underline">
+                    {s.deliveryPartner.name}
+                  </Link>
+                ) : (
+                  <Badge tone="amber">{t.common.unassigned}</Badge>
+                ),
+            },
+            {
+              header: '',
+              align: 'right',
+              cell: (s) => (
+                <Link
+                  href={`/subscriptions/${s.id}`}
+                  className="font-medium text-(--color-brand-blue-dark) hover:underline"
+                >
+                  {t.common.view}
+                </Link>
+              ),
+            },
+          ]}
+          rows={subscriptions}
+        />
       )}
     </>
   );

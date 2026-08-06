@@ -2,10 +2,12 @@
 
 import { useActionState } from 'react';
 import { login, type LoginState } from './actions';
+import { useTranslations } from '@/lib/i18n/client';
 
 const initialState: LoginState = {};
 
 export function LoginForm({ next }: { next: string }) {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(login, initialState);
 
   return (
@@ -14,7 +16,7 @@ export function LoginForm({ next }: { next: string }) {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="username" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Username
+          {t.login.username}
         </label>
         <input
           id="username"
@@ -28,7 +30,7 @@ export function LoginForm({ next }: { next: string }) {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Password
+          {t.login.password}
         </label>
         <input
           id="password"
@@ -51,7 +53,7 @@ export function LoginForm({ next }: { next: string }) {
         disabled={pending}
         className="brand-gradient mt-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
       >
-        {pending ? 'Signing in…' : 'Sign in'}
+        {pending ? t.login.submitting : t.login.submit}
       </button>
     </form>
   );

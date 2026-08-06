@@ -13,11 +13,13 @@ import {
   PaymentStatusBadge,
   SubscriptionStatusBadge,
 } from '@/components/StatusBadge';
-import { userDisplayName } from '@/components/UserLink';
 import { formatAddress, formatCurrency, formatDate, formatDateTime, formatFrequency } from '@/lib/format';
+import { interpolate } from '@/lib/i18n/config';
+import { getDictionary } from '@/lib/i18n/server';
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const t = await getDictionary();
 
   // Assembled from the list endpoints — there's no /admin/users/:id on the backend yet.
   let referrals, subscriptions, payments, orders;
@@ -29,10 +31,10 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
       api.listExtraBottleOrders(),
     ]);
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="User" />
+        <PageHeader title={t.users.detail.title} />
         <ErrorBanner message={message} />
       </>
     );
@@ -60,27 +62,42 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   return (
     <>
       <Link href="/users" className="mb-4 inline-block text-sm text-(--color-brand-blue-dark) hover:underline">
-        ← All users
+        {t.users.detail.back}
       </Link>
 
       <PageHeader
-        title={userDisplayName(identity)}
+        title={identity.name ?? t.common.unnamedCustomer}
         description={identity.mobile}
         action={
           activeSubscriptions.length > 0 ? (
-            <Badge tone="green">Active subscriber</Badge>
+            <Badge tone="green">{t.users.detail.activeSubscriber}</Badge>
           ) : (
-            <Badge tone="slate">No active subscription</Badge>
+            <Badge tone="slate">{t.users.detail.noActiveSubscription}</Badge>
           )
         }
       />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Subscriptions" value={userSubscriptions.length} tone="blue" href="/subscriptions" />
-        <StatCard label="Total paid" value={formatCurrency(String(paidTotal))} tone="green" href="/payments" />
-        <StatCard label="Extra-bottle orders" value={userOrders.length} tone="slate" href="/extra-bottle-orders" />
         <StatCard
-          label="Wallet balance"
+          label={t.users.detail.subscriptions}
+          value={userSubscriptions.length}
+          tone="blue"
+          href="/subscriptions"
+        />
+        <StatCard
+          label={t.users.detail.totalPaid}
+          value={formatCurrency(String(paidTotal))}
+          tone="green"
+          href="/payments"
+        />
+        <StatCard
+          label={t.users.detail.extraBottleOrders}
+          value={userOrders.length}
+          tone="slate"
+          href="/extra-bottle-orders"
+        />
+        <StatCard
+          label={t.users.walletBalance}
           value={formatCurrency(referral?.walletBalance ?? '0')}
           tone="amber"
           href="/referrals"
@@ -88,71 +105,80 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card title="Referrals">
+        <Card title={t.users.detail.referrals}>
           {referral ? (
             <dl className="flex flex-col gap-3 text-sm">
-              <Row label="Referral code">
+              <Row label={t.users.referralCode}>
                 <span className="font-mono text-xs">{referral.referralCode}</span>
               </Row>
-              <Row label="People referred">{referral.referredCount}</Row>
-              <Row label="Bonus earned">{formatCurrency(referral.totalBonusEarned)}</Row>
-              <Row label="Leaderboard">
+              <Row label={t.users.detail.peopleReferred}>{referral.referredCount}</Row>
+              <Row label={t.users.detail.bonusEarned}>{formatCurrency(referral.totalBonusEarned)}</Row>
+              <Row label={t.users.detail.leaderboard}>
                 <Link href="/referrals" className="text-(--color-brand-blue-dark) hover:underline">
-                  View referrals →
+                  {t.users.detail.viewReferrals}
                 </Link>
               </Row>
             </dl>
           ) : (
-            <p className="text-sm text-(--color-text-muted)">No referral record for this user.</p>
+            <p className="text-sm text-(--color-text-muted)">{t.users.detail.noReferralRecord}</p>
           )}
         </Card>
 
-        <Card title="Delivery address">
+        <Card title={t.users.detail.address}>
           {latestAddress ? (
             <>
               <p className="text-sm text-(--color-text)">{formatAddress(latestAddress)}</p>
-              <p className="mt-2 text-xs text-(--color-text-muted) capitalize">{latestAddress.type} address</p>
+              <p className="mt-2 text-xs text-(--color-text-muted) capitalize">
+                {interpolate(t.subscriptionDetail.addressType, { type: latestAddress.type })}
+              </p>
             </>
           ) : (
-            <p className="text-sm text-(--color-text-muted)">No address on file — this user has never subscribed.</p>
+            <p className="text-sm text-(--color-text-muted)">{t.users.detail.noAddress}</p>
           )}
         </Card>
       </div>
 
-      <Section title="Subscriptions" href="/subscriptions" linkLabel="All subscriptions">
+      <Section
+        title={t.users.detail.subscriptions}
+        href="/subscriptions"
+        linkLabel={t.users.detail.allSubscriptions}
+      >
         {userSubscriptions.length === 0 ? (
-          <EmptyState title="No subscriptions" description="This user hasn't purchased a plan yet." />
+          <EmptyState
+            title={t.users.detail.noSubscriptions}
+            description={t.users.detail.noSubscriptionsHint}
+          />
         ) : (
           <DataTable
             columns={[
               {
-                header: 'Plan',
+                header: t.common.plan,
                 cell: (s) => (
                   <Link href={`/subscriptions/${s.id}`} className="font-medium text-(--color-text) hover:underline">
                     {s.plan.name}
                   </Link>
                 ),
               },
-              { header: 'Frequency', cell: (s) => formatFrequency(s.frequency) },
-              { header: 'Bottles', cell: (s) => `${s.totalBottles} × ${s.bottleSizeLtr}L` },
+              { header: t.common.frequency, cell: (s) => formatFrequency(s.frequency) },
+              { header: t.subscriptions.bottles, cell: (s) => `${s.totalBottles} × ${s.bottleSizeLtr}L` },
               {
-                header: 'Schedule',
+                header: t.subscriptions.schedule,
                 cell: (s) => (
                   <span className="whitespace-nowrap text-(--color-text-muted)">
                     {formatDate(s.startDate)} → {formatDate(s.endDate)}
                   </span>
                 ),
               },
-              { header: 'Status', cell: (s) => <SubscriptionStatusBadge status={s.status} /> },
+              { header: t.common.status, cell: (s) => <SubscriptionStatusBadge status={s.status} /> },
               {
-                header: 'Delivery partner',
+                header: t.subscriptions.deliveryPartner,
                 cell: (s) =>
                   s.deliveryPartner ? (
-                    <Link href="/delivery-partners" className="hover:underline">
+                    <Link href={`/delivery-partners/${s.deliveryPartner.id}`} className="hover:underline">
                       {s.deliveryPartner.name}
                     </Link>
                   ) : (
-                    <Badge tone="amber">Unassigned</Badge>
+                    <Badge tone="amber">{t.common.unassigned}</Badge>
                   ),
               },
               {
@@ -163,7 +189,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
                     href={`/subscriptions/${s.id}`}
                     className="font-medium text-(--color-brand-blue-dark) hover:underline"
                   >
-                    View
+                    {t.common.view}
                   </Link>
                 ),
               },
@@ -173,30 +199,32 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         )}
       </Section>
 
-      <Section title="Payments" href="/payments" linkLabel="All payments">
+      <Section title={t.users.detail.payments} href="/payments" linkLabel={t.users.detail.allPayments}>
         {userPayments.length === 0 ? (
-          <EmptyState title="No payments" />
+          <EmptyState title={t.users.detail.noPayments} />
         ) : (
           <DataTable
             columns={[
               {
-                header: 'Purpose',
+                header: t.payments.purpose,
                 cell: (p) => (
-                  <Badge tone="blue">{p.purpose === 'subscription' ? 'Subscription' : 'Extra bottles'}</Badge>
+                  <Badge tone="blue">
+                    {p.purpose === 'subscription' ? t.payments.subscription : t.payments.extraBottles}
+                  </Badge>
                 ),
               },
-              { header: 'Total', cell: (p) => formatCurrency(p.totalAmount) },
+              { header: t.common.total, cell: (p) => formatCurrency(p.totalAmount) },
               {
-                header: 'Wallet / Gateway',
+                header: t.payments.walletGateway,
                 cell: (p) => (
                   <span className="text-(--color-text-muted)">
                     {formatCurrency(p.walletAmount)} / {formatCurrency(p.gatewayAmount)}
                   </span>
                 ),
               },
-              { header: 'Status', cell: (p) => <PaymentStatusBadge status={p.status} /> },
+              { header: t.common.status, cell: (p) => <PaymentStatusBadge status={p.status} /> },
               {
-                header: 'Time',
+                header: t.common.time,
                 cell: (p) => <span className="text-(--color-text-muted)">{formatDateTime(p.createdAt)}</span>,
               },
             ]}
@@ -205,18 +233,22 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
         )}
       </Section>
 
-      <Section title="Extra-bottle orders" href="/extra-bottle-orders" linkLabel="All orders">
+      <Section
+        title={t.users.detail.extraBottleOrders}
+        href="/extra-bottle-orders"
+        linkLabel={t.users.detail.allOrders}
+      >
         {userOrders.length === 0 ? (
-          <EmptyState title="No extra-bottle orders" />
+          <EmptyState title={t.users.detail.noOrders} />
         ) : (
           <DataTable
             columns={[
-              { header: 'Quantity', cell: (o) => o.quantity },
-              { header: 'Unit price', cell: (o) => formatCurrency(o.unitPrice) },
-              { header: 'Total', cell: (o) => formatCurrency(o.totalAmount) },
-              { header: 'Status', cell: (o) => <ExtraBottleOrderStatusBadge status={o.status} /> },
+              { header: t.common.quantity, cell: (o) => o.quantity },
+              { header: t.extraBottles.unitPrice, cell: (o) => formatCurrency(o.unitPrice) },
+              { header: t.common.total, cell: (o) => formatCurrency(o.totalAmount) },
+              { header: t.common.status, cell: (o) => <ExtraBottleOrderStatusBadge status={o.status} /> },
               {
-                header: 'Time',
+                header: t.common.time,
                 cell: (o) => <span className="text-(--color-text-muted)">{formatDateTime(o.createdAt)}</span>,
               },
             ]}
@@ -241,9 +273,12 @@ function Section({
 }) {
   return (
     <div className="mt-10">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">{title}</h2>
-        <Link href={href} className="text-sm font-medium text-(--color-brand-blue-dark) hover:underline">
+        <Link
+          href={href}
+          className="shrink-0 text-sm font-medium text-(--color-brand-blue-dark) hover:underline"
+        >
           {linkLabel} →
         </Link>
       </div>

@@ -3,10 +3,12 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { FormError, FormField, FormSubmit, formRowClass, inputClass } from '@/components/FormField';
 import { createPlan, type PlanFormState } from './actions';
+import { useTranslations } from '@/lib/i18n/client';
 
 const initialState: PlanFormState = {};
 
 export function CreatePlanForm() {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(createPlan, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -18,10 +20,10 @@ export function CreatePlanForm() {
 
   return (
     <form ref={formRef} action={formAction} className={formRowClass}>
-      <FormField label="Name" htmlFor="name" className="flex-1">
+      <FormField label={t.plans.planName} htmlFor="name" className="flex-1">
         <input id="name" name="name" type="text" placeholder="30 Days Plan" required className={inputClass} />
       </FormField>
-      <FormField label="Duration (bottles)" htmlFor="durationDays">
+      <FormField label={t.plans.durationDays} htmlFor="durationDays">
         <input
           id="durationDays"
           name="durationDays"
@@ -32,7 +34,7 @@ export function CreatePlanForm() {
           className={`w-28 ${inputClass}`}
         />
       </FormField>
-      <FormField label="Bottle size (L)" htmlFor="bottleSizeLtr">
+      <FormField label={t.plans.bottleSize} htmlFor="bottleSizeLtr">
         <input
           id="bottleSizeLtr"
           name="bottleSizeLtr"
@@ -44,9 +46,9 @@ export function CreatePlanForm() {
         />
       </FormField>
       <FormField
-        label="Price (₹)"
+        label={t.plans.price}
         htmlFor="price"
-        hint="Whole rupees, evenly divisible by the referral divisor above."
+        hint={t.plans.priceHint}
         className="max-w-xs"
       >
         <input
@@ -60,7 +62,7 @@ export function CreatePlanForm() {
           className={`w-28 ${inputClass}`}
         />
       </FormField>
-      <FormSubmit pending={pending} label="Create plan" pendingLabel="Creating…" />
+      <FormSubmit pending={pending} label={t.plans.create} pendingLabel={t.plans.creating} />
       <FormError message={state.error} />
     </form>
   );

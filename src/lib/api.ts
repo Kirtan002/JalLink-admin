@@ -6,6 +6,8 @@ import type {
   CreatePlanInput,
   Delivery,
   DeliveryPartner,
+  DeliveryPartnerDetail,
+  DeliveryPartnerKycStatus,
   PaymentPurpose,
   PaymentStatus,
   Plan,
@@ -46,6 +48,10 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
       // Attributes /admin/* writes to a name in the backend's audit log — not auth, just
       // the one shared ADMIN_USERNAME this panel logs in with (see lib/session.ts).
       'X-Admin-Actor': process.env.ADMIN_USERNAME ?? 'unknown',
+      // The actual gate on /admin/*. Optional here because a development backend started
+      // without ADMIN_API_KEY leaves those routes open; a production backend refuses to boot
+      // without one, so an unset value there turns every admin call into a 401.
+      ...(process.env.ADMIN_API_KEY ? { 'X-Admin-Key': process.env.ADMIN_API_KEY } : {}),
       ...init?.headers,
     },
     cache: 'no-store',
@@ -83,11 +89,34 @@ export const api = {
     apiFetch<Plan>(`/admin/plans/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
   deletePlan: (id: string) => apiFetch<void>(`/admin/plans/${id}`, { method: 'DELETE' }),
 
-  listDeliveryPartners: () => apiFetch<DeliveryPartner[]>('/admin/delivery-partners'),
+  listDeliveryPartners: (kycStatus?: DeliveryPartnerKycStatus) =>
+    apiFetch<DeliveryPartner[]>(
+      `/admin/delivery-partners${kycStatus ? `?kycStatus=${kycStatus}` : ''}`,
+    ),
+  getDeliveryPartner: (id: string) =>
+    apiFetch<DeliveryPartnerDetail>(`/admin/delivery-partners/${id}`),
   createDeliveryPartner: (input: { name: string; mobile: string }) =>
     apiFetch<DeliveryPartner>('/admin/delivery-partners', {
       method: 'POST',
       body: JSON.stringify(input),
+    }),
+  /** KYC review. `reason` is required on rejection — the backend rejects anything shorter
+   * than 10 characters, because the partner is shown it verbatim and has to act on it. */
+  approvePartnerKyc: (id: string, note?: string) =>
+    apiFetch<DeliveryPartnerDetail>(`/admin/delivery-partners/${id}/kyc/approve`, {
+      method: 'POST',
+      body: JSON.stringify(note ? { note } : {}),
+    }),
+  rejectPartnerKyc: (id: string, reason: string) =>
+    apiFetch<DeliveryPartnerDetail>(`/admin/delivery-partners/${id}/kyc/reject`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
+  /** Suspend / reinstate — independent of the KYC decision. */
+  updatePartnerStatus: (id: string, isActive: boolean, note?: string) =>
+    apiFetch<DeliveryPartnerDetail>(`/admin/delivery-partners/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ isActive, ...(note ? { note } : {}) }),
     }),
   getDeliveryPartnerWallet: (id: string) =>
     apiFetch<WalletSummary>(`/admin/delivery-partners/${id}/wallet`),

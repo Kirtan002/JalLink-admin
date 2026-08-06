@@ -3,10 +3,12 @@
 import { useActionState, useEffect, useRef } from 'react';
 import { FormError, FormField, FormSubmit, formRowClass, inputClass } from '@/components/FormField';
 import { withdrawAdminWallet, type WithdrawFormState } from './actions';
+import { useTranslations } from '@/lib/i18n/client';
 
 const initialState: WithdrawFormState = {};
 
 export function WithdrawForm() {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(withdrawAdminWallet, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -18,7 +20,7 @@ export function WithdrawForm() {
 
   return (
     <form ref={formRef} action={formAction} className={formRowClass}>
-      <FormField label="Amount (₹)" htmlFor="amount">
+      <FormField label={t.wallet.amountLabel} htmlFor="amount">
         <input
           id="amount"
           name="amount"
@@ -30,10 +32,16 @@ export function WithdrawForm() {
           className={`w-32 ${inputClass}`}
         />
       </FormField>
-      <FormField label="Note (optional)" htmlFor="note" className="flex-1">
-        <input id="note" name="note" type="text" placeholder="Transferred to company bank account" className={inputClass} />
+      <FormField label={t.wallet.noteLabel} htmlFor="note" className="flex-1">
+        <input
+          id="note"
+          name="note"
+          type="text"
+          placeholder={t.wallet.notePlaceholder}
+          className={inputClass}
+        />
       </FormField>
-      <FormSubmit pending={pending} label="Withdraw" pendingLabel="Withdrawing…" />
+      <FormSubmit pending={pending} label={t.wallet.withdraw} pendingLabel={t.wallet.withdrawing} />
       <FormError message={state.error} />
     </form>
   );

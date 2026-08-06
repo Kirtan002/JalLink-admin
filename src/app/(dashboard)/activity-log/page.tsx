@@ -5,6 +5,7 @@ import { ErrorBanner } from '@/components/ErrorBanner';
 import { EmptyState } from '@/components/EmptyState';
 import { DataTable } from '@/components/DataTable';
 import { formatDateTime } from '@/lib/format';
+import { getDictionary } from '@/lib/i18n/server';
 
 function formatAction(action: string): string {
   return action
@@ -29,21 +30,23 @@ function targetHref(targetType: string, targetId: string | null): string | null 
       return '/wallet';
     case 'delivery_partner':
     case 'deliverypartner':
-      return '/delivery-partners';
+      return targetId ? `/delivery-partners/${targetId}` : '/delivery-partners';
     default:
       return null;
   }
 }
 
 export default async function ActivityLogPage() {
+  const t = await getDictionary();
+
   let logs;
   try {
     logs = await api.listAuditLogs();
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="Activity Log" />
+        <PageHeader title={t.activityLog.title} />
         <ErrorBanner message={message} />
       </>
     );
@@ -51,26 +54,23 @@ export default async function ActivityLogPage() {
 
   return (
     <>
-      <PageHeader
-        title="Activity Log"
-        description="History of admin-panel mutations — plan/settings/wallet changes and who made them. The 'actor' is this panel's single shared login, not per-admin auth, so it names the account, not necessarily the individual."
-      />
+      <PageHeader title={t.activityLog.title} description={t.activityLog.description} />
 
       {logs.length === 0 ? (
-        <EmptyState title="No activity yet" description="Admin actions will show up here as they happen." />
+        <EmptyState title={t.activityLog.empty} description={t.activityLog.emptyHint} />
       ) : (
         <DataTable
           columns={[
             {
-              header: 'Time',
+              header: t.common.time,
               cell: (l) => <span className="whitespace-nowrap text-(--color-text-muted)">{formatDateTime(l.createdAt)}</span>,
             },
-            { header: 'Actor', cell: (l) => <span className="font-medium text-(--color-text)">{l.actor}</span> },
-            { header: 'Action', cell: (l) => formatAction(l.action) },
+            { header: t.activityLog.actor, cell: (l) => <span className="font-medium text-(--color-text)">{l.actor}</span> },
+            { header: t.activityLog.action, cell: (l) => formatAction(l.action) },
             {
-              header: 'Target',
+              header: t.activityLog.target,
               cell: (l) => {
-                if (!l.targetType) return <span className="text-(--color-text-muted)">—</span>;
+                if (!l.targetType) return <span className="text-(--color-text-muted)">{t.common.dash}</span>;
                 const label = `${l.targetType}${l.targetId ? ` · ${l.targetId.slice(0, 8)}` : ''}`;
                 const href = targetHref(l.targetType, l.targetId);
                 return href ? (
@@ -83,12 +83,12 @@ export default async function ActivityLogPage() {
               },
             },
             {
-              header: 'Details',
+              header: t.activityLog.details,
               cell: (l) =>
                 l.details ? (
                   <code className="text-xs break-all text-(--color-text-muted)">{JSON.stringify(l.details)}</code>
                 ) : (
-                  <span className="text-(--color-text-muted)">—</span>
+                  <span className="text-(--color-text-muted)">{t.common.dash}</span>
                 ),
             },
           ]}

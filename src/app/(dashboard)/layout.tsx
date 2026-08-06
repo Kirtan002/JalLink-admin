@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react';
-import { Sidebar } from '@/components/Sidebar';
+import { AppShell } from '@/components/AppShell';
+import { I18nProvider } from '@/lib/i18n/client';
+import { getI18n } from '@/lib/i18n/server';
 
-export default function DashboardLayout({ children }: { children: ReactNode }) {
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  const { locale, dict } = await getI18n();
+
   return (
-    <div className="flex min-h-screen items-start">
-      <Sidebar username={process.env.ADMIN_USERNAME ?? 'admin'} />
-      <main className="min-w-0 flex-1">
-        <div className="mx-auto max-w-6xl px-8 py-10">{children}</div>
-      </main>
-    </div>
+    <I18nProvider locale={locale} dict={dict}>
+      <AppShell username={process.env.ADMIN_USERNAME ?? 'admin'}>{children}</AppShell>
+    </I18nProvider>
   );
 }

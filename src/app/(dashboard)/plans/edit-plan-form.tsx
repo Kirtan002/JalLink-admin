@@ -9,11 +9,13 @@ import {
   inputClass,
 } from '@/components/FormField';
 import { updatePlan, type PlanFormState } from './actions';
+import { useTranslations } from '@/lib/i18n/client';
 import type { Plan } from '@/lib/types';
 
 const initialState: PlanFormState = {};
 
 export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void }) {
+  const t = useTranslations();
   const boundAction = updatePlan.bind(null, plan.id);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
 
@@ -25,7 +27,7 @@ export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void 
 
   return (
     <form action={formAction} className={formRowClass}>
-      <FormField label="Name" htmlFor={`name-${plan.id}`} compact className="flex-1">
+      <FormField label={t.plans.planName} htmlFor={`name-${plan.id}`} compact className="flex-1">
         <input
           id={`name-${plan.id}`}
           name="name"
@@ -35,7 +37,7 @@ export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void 
           className={inputClass}
         />
       </FormField>
-      <FormField label="Duration (bottles)" htmlFor={`durationDays-${plan.id}`} compact>
+      <FormField label={t.plans.durationDays} htmlFor={`durationDays-${plan.id}`} compact>
         <input
           id={`durationDays-${plan.id}`}
           name="durationDays"
@@ -46,7 +48,7 @@ export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void 
           className={`w-28 ${inputClass}`}
         />
       </FormField>
-      <FormField label="Bottle size (L)" htmlFor={`bottleSizeLtr-${plan.id}`} compact>
+      <FormField label={t.plans.bottleSize} htmlFor={`bottleSizeLtr-${plan.id}`} compact>
         <input
           id={`bottleSizeLtr-${plan.id}`}
           name="bottleSizeLtr"
@@ -57,7 +59,7 @@ export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void 
           className={`w-24 ${inputClass}`}
         />
       </FormField>
-      <FormField label="Price (₹)" htmlFor={`price-${plan.id}`} compact>
+      <FormField label={t.plans.price} htmlFor={`price-${plan.id}`} compact>
         <input
           id={`price-${plan.id}`}
           name="price"
@@ -77,14 +79,14 @@ export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void 
             disabled={pending}
             className="brand-gradient rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
           >
-            {pending ? 'Saving…' : 'Save'}
+            {pending ? t.plans.saving : t.plans.save}
           </button>
           <button
             type="button"
             onClick={onDone}
             className="rounded-lg border border-(--color-border) px-4 py-2.5 text-sm font-medium text-(--color-text-muted) transition hover:bg-(--color-surface-muted)"
           >
-            Cancel
+            {t.common.cancel}
           </button>
         </div>
       </div>

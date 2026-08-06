@@ -1,7 +1,17 @@
 export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'completed';
 export type SubscriptionFrequency = 'daily' | 'alternate_days';
 export type DeliveryStatus = 'scheduled' | 'delivered' | 'skipped' | 'cancelled';
-export type DeliveryPartnerKycStatus = 'pending' | 'active' | 'suspended' | 'rejected';
+/** Mirrors the backend enum exactly. `approved` is about the *documents*; whether the
+ * partner is currently allowed to work is `isActive`, which is a separate lever. */
+export type DeliveryPartnerKycStatus = 'not_submitted' | 'pending' | 'approved' | 'rejected';
+
+export type KycDocumentType =
+  | 'aadhaar_front'
+  | 'aadhaar_back'
+  | 'pan'
+  | 'driving_licence'
+  | 'vehicle_rc'
+  | 'selfie';
 
 export interface Plan {
   id: string;
@@ -26,11 +36,52 @@ export type UpdatePlanInput = Partial<CreatePlanInput>;
 
 export interface DeliveryPartner {
   id: string;
-  name: string;
+  /** Null between self-signup and the first KYC submission, which is what sets it. */
+  name: string | null;
   mobile: string;
   isActive: boolean;
+  kycStatus: DeliveryPartnerKycStatus;
+  kycSubmittedAt: string | null;
+  kycReviewedAt: string | null;
+  kycReviewedBy: string | null;
+  kycRejectionReason: string | null;
+  /** >1 means the partner was rejected at least once and submitted again. */
+  kycSubmissionCount: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface KycDocument {
+  id: string;
+  type: KycDocumentType;
+  label: string;
+  documentNumber: string | null;
+  fileUrl: string;
+  submissionNumber: number;
+  /** False for files belonging to an earlier, already-rejected round. */
+  isCurrentSubmission: boolean;
+  uploadedAt: string;
+}
+
+export interface KycEvent {
+  fromStatus: DeliveryPartnerKycStatus | null;
+  toStatus: DeliveryPartnerKycStatus;
+  actorType: 'delivery_partner' | 'admin';
+  note: string | null;
+  submissionNumber: number | null;
+  createdAt: string;
+}
+
+/** The review packet from GET /admin/delivery-partners/:id — identity numbers unmasked,
+ * every submission round's documents, and the decision history. */
+export interface DeliveryPartnerDetail extends DeliveryPartner {
+  fullName: string | null;
+  dob: string | null;
+  address: string | null;
+  aadhaarNumber: string | null;
+  panNumber: string | null;
+  documents: KycDocument[];
+  history: KycEvent[];
 }
 
 export interface AdminSubscription {
@@ -106,7 +157,13 @@ export interface AdminPayment {
 }
 
 export type WalletTxnType = 'credit' | 'debit';
-export type WalletTxnReason = 'referral_bonus' | 'platform_share' | 'wallet_redemption' | 'withdrawal';
+export type WalletTxnReason =
+  | 'referral_bonus'
+  | 'platform_share'
+  | 'wallet_redemption'
+  | 'withdrawal'
+  | 'referral_reversal'
+  | 'delivery_commission';
 
 export interface WalletTransaction {
   id: string;
@@ -161,7 +218,7 @@ export interface ReferralLeaderboardRow {
   totalBonusEarned: string;
 }
 
-export type ExtraBottleOrderStatus = 'pending_payment' | 'paid' | 'failed' | 'cancelled';
+export type ExtraBottleOrderStatus = 'pending_payment' | 'paid' | 'failed' | 'cancelled' | 'delivered';
 
 export interface AdminExtraBottleOrder {
   id: string;

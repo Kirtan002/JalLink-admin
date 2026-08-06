@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useTranslations } from '@/lib/i18n/client';
 
 export interface LinkableUser {
   id: string;
@@ -6,16 +9,14 @@ export interface LinkableUser {
   mobile: string;
 }
 
-export function userDisplayName(user: { name: string | null }): string {
-  return user.name ?? 'Unnamed customer';
-}
-
 /** Customer name + mobile, linked through to that user's page. */
 export function UserLink({ user }: { user: LinkableUser }) {
+  const t = useTranslations();
+
   return (
     <Link href={`/users/${user.id}`} className="group block">
       <div className="font-medium text-(--color-text) group-hover:text-(--color-brand-blue-dark) group-hover:underline">
-        {userDisplayName(user)}
+        {user.name ?? t.common.unnamedCustomer}
       </div>
       <div className="text-xs text-(--color-text-muted)">{user.mobile}</div>
     </Link>

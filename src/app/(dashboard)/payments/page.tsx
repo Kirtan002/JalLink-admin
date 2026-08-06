@@ -9,16 +9,19 @@ import { PaymentStatusBadge } from '@/components/StatusBadge';
 import { UserLink } from '@/components/UserLink';
 import { PaymentModeBanner } from '@/components/PaymentModeBanner';
 import { formatCurrency, formatDateTime } from '@/lib/format';
+import { getDictionary } from '@/lib/i18n/server';
 
 export default async function PaymentsPage() {
+  const t = await getDictionary();
+
   let payments;
   try {
     payments = await api.listPayments();
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="Payments" />
+        <PageHeader title={t.payments.title} />
         <ErrorBanner message={message} />
       </>
     );
@@ -30,41 +33,43 @@ export default async function PaymentsPage() {
 
   return (
     <>
-      <PageHeader title="Payments" description="Every subscription and extra-bottle payment, across all users." />
+      <PageHeader title={t.payments.title} description={t.payments.description} />
       <PaymentModeBanner />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Total" value={payments.length} tone="blue" />
-        <StatCard label="Paid" value={paid} tone="green" />
-        <StatCard label="Awaiting gateway" value={pending} tone="amber" />
-        <StatCard label="Failed" value={failed} tone="slate" />
+        <StatCard label={t.payments.total} value={payments.length} tone="blue" />
+        <StatCard label={t.payments.paid} value={paid} tone="green" />
+        <StatCard label={t.payments.awaitingGateway} value={pending} tone="amber" />
+        <StatCard label={t.payments.failed} value={failed} tone="slate" />
       </div>
 
       <div className="mt-8">
         {payments.length === 0 ? (
-          <EmptyState title="No payments yet" description="They'll show up here as users check out." />
+          <EmptyState title={t.payments.empty} description={t.payments.emptyHint} />
         ) : (
           <DataTable
             columns={[
-              { header: 'Customer', cell: (p) => <UserLink user={p.user} /> },
+              { header: t.common.customer, cell: (p) => <UserLink user={p.user} /> },
               {
-                header: 'Purpose',
+                header: t.payments.purpose,
                 cell: (p) => (
-                  <Badge tone="blue">{p.purpose === 'subscription' ? 'Subscription' : 'Extra bottles'}</Badge>
+                  <Badge tone="blue">
+                    {p.purpose === 'subscription' ? t.payments.subscription : t.payments.extraBottles}
+                  </Badge>
                 ),
               },
-              { header: 'Total', cell: (p) => formatCurrency(p.totalAmount) },
+              { header: t.common.total, cell: (p) => formatCurrency(p.totalAmount) },
               {
-                header: 'Wallet / Gateway',
+                header: t.payments.walletGateway,
                 cell: (p) => (
                   <span className="text-(--color-text-muted)">
                     {formatCurrency(p.walletAmount)} / {formatCurrency(p.gatewayAmount)}
                   </span>
                 ),
               },
-              { header: 'Status', cell: (p) => <PaymentStatusBadge status={p.status} /> },
+              { header: t.common.status, cell: (p) => <PaymentStatusBadge status={p.status} /> },
               {
-                header: 'Time',
+                header: t.common.time,
                 cell: (p) => <span className="text-(--color-text-muted)">{formatDateTime(p.createdAt)}</span>,
               },
             ]}

@@ -1,21 +1,25 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/DataTable';
-import { DemoDataNotice } from '@/components/DemoDataNotice';
 import { EmptyState } from '@/components/EmptyState';
 import { PartnerKycStatusBadge } from '@/components/StatusBadge';
 import { formatDate } from '@/lib/format';
-import type { DeliveryPartner, DeliveryPartnerKycStatus } from '@/lib/types';
+import { useTranslations } from '@/lib/i18n/client';
+import { interpolate } from '@/lib/i18n/config';
+import type { DeliveryPartner } from '@/lib/types';
 import { PartnerWalletCell } from './wallet-cell';
 
-const FILTERS: { label: string; value: DeliveryPartnerKycStatus | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Active', value: 'active' },
-  { label: 'Suspended', value: 'suspended' },
-  { label: 'Rejected', value: 'rejected' },
-];
+/** 'suspended' is not a KYC status — it is the `isActive` flag — but it is what an operator
+ * is looking for when they scan this list, so it gets a filter of its own. */
+type Filter = 'all' | 'pending' | 'approved' | 'rejected' | 'suspended';
+
+function matches(partner: DeliveryPartner, filter: Filter): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'suspended') return !partner.isActive;
+  return partner.isActive && partner.kycStatus === filter;
+}
 
 export function PartnersTable({
   partners,
@@ -24,34 +28,45 @@ export function PartnersTable({
   partners: DeliveryPartner[];
   wallets: Record<string, string>;
 }) {
-  const [statusById, setStatusById] = useState<Record<string, DeliveryPartnerKycStatus>>(() =>
-    Object.fromEntries(partners.map((p) => [p.id, p.isActive ? 'active' : 'suspended'])),
-  );
-  const [filter, setFilter] = useState<DeliveryPartnerKycStatus | 'all'>('all');
+  const t = useTranslations();
+  const [filter, setFilter] = useState<Filter>('all');
+
+  const filters: { label: string; value: Filter }[] = [
+    { label: t.common.all, value: 'all' },
+    { label: t.deliveryPartners.awaitingReview, value: 'pending' },
+    { label: t.deliveryPartners.approved, value: 'approved' },
+    { label: t.deliveryPartners.rejected, value: 'rejected' },
+    { label: t.deliveryPartners.suspended, value: 'suspended' },
+  ];
 
   const rows = useMemo(
-    () => partners.filter((p) => filter === 'all' || statusById[p.id] === filter),
-    [partners, statusById, filter],
+    () =>
+      // Whoever is waiting on a decision comes first — this list is a work queue before it is
+      // a directory.
+      [...partners]
+        .filter((p) => matches(p, filter))
+        .sort((a, b) => {
+          const aPending = a.kycStatus === 'pending' ? 0 : 1;
+          const bPending = b.kycStatus === 'pending' ? 0 : 1;
+          if (aPending !== bPending) return aPending - bPending;
+          return (b.kycSubmittedAt ?? b.createdAt).localeCompare(a.kycSubmittedAt ?? a.createdAt);
+        }),
+    [partners, filter],
   );
 
-  function setStatus(id: string, status: DeliveryPartnerKycStatus) {
-    setStatusById((prev) => ({ ...prev, [id]: status }));
-  }
-
   if (partners.length === 0) {
-    return <EmptyState title="No delivery partners yet" description="Add one above to start assigning subscriptions." />;
+    return <EmptyState title={t.deliveryPartners.empty} description={t.deliveryPartners.emptyHint} />;
   }
 
   return (
     <>
-      <DemoDataNotice message="KYC status and the approve / reject / suspend actions below are a UI preview — they update this screen only, until the backend adds a status field." />
-
       <div className="mb-4 flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
+        {filters.map((f) => (
           <button
             key={f.value}
             type="button"
             onClick={() => setFilter(f.value)}
+            aria-pressed={filter === f.value}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
               filter === f.value
                 ? 'brand-gradient text-white shadow-sm'
@@ -64,74 +79,75 @@ export function PartnersTable({
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState title="No partners match this filter" />
+        <EmptyState title={t.deliveryPartners.noMatch} />
       ) : (
         <DataTable
           columns={[
             {
-              header: 'Name',
-              cell: (p) => <span className="font-medium text-(--color-text)">{p.name}</span>,
+              header: t.common.name,
+              cell: (p) => (
+                <Link href={`/delivery-partners/${p.id}`} className="group block">
+                  <div className="font-medium text-(--color-text) group-hover:text-(--color-brand-blue-dark) group-hover:underline">
+                    {p.name ?? (
+                      <span className="text-(--color-text-muted) italic">
+                        {t.deliveryPartners.awaitingKyc}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-(--color-text-muted)">{p.mobile}</div>
+                </Link>
+              ),
             },
-            { header: 'Mobile', cell: (p) => p.mobile },
             {
-              header: 'KYC status',
-              cell: (p) => <PartnerKycStatusBadge status={statusById[p.id]} />,
+              header: t.deliveryPartners.kycStatus,
+              cell: (p) => (
+                <div className="flex flex-col items-end gap-1 md:items-start">
+                  <PartnerKycStatusBadge status={p.kycStatus} isActive={p.isActive} />
+                  {p.kycSubmissionCount > 1 && (
+                    <span className="text-xs text-(--color-text-muted)">
+                      {interpolate(t.deliveryPartners.resubmission, { count: p.kycSubmissionCount })}
+                    </span>
+                  )}
+                </div>
+              ),
             },
             {
-              header: 'Added',
-              cell: (p) => <span className="text-(--color-text-muted)">{formatDate(p.createdAt)}</span>,
+              header: t.common.added,
+              cell: (p) => (
+                <span className="text-(--color-text-muted)">
+                  {p.kycSubmittedAt
+                    ? interpolate(t.deliveryPartners.submittedOn, {
+                        date: formatDate(p.kycSubmittedAt),
+                      })
+                    : formatDate(p.createdAt)}
+                </span>
+              ),
             },
             {
-              header: 'Wallet',
+              header: t.deliveryPartners.wallet,
               align: 'right',
-              cell: (p) => <PartnerWalletCell partnerId={p.id} balance={wallets[p.id] ?? '0.00'} />,
+              cell: (p) =>
+                p.kycStatus === 'approved' ? (
+                  <PartnerWalletCell partnerId={p.id} balance={wallets[p.id] ?? '0.00'} />
+                ) : (
+                  <span className="text-(--color-text-muted)">{t.common.dash}</span>
+                ),
             },
             {
               header: '',
               align: 'right',
-              cell: (p) => {
-                const status = statusById[p.id];
-                if (status === 'pending') {
-                  return (
-                    <div className="flex justify-end gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setStatus(p.id, 'active')}
-                        className="font-medium text-(--color-brand-green-dark) hover:underline"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setStatus(p.id, 'rejected')}
-                        className="font-medium text-red-600 hover:underline dark:text-red-400"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  );
-                }
-                if (status === 'active') {
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => setStatus(p.id, 'suspended')}
-                      className="font-medium text-red-600 hover:underline dark:text-red-400"
-                    >
-                      Suspend
-                    </button>
-                  );
-                }
-                return (
-                  <button
-                    type="button"
-                    onClick={() => setStatus(p.id, 'active')}
-                    className="font-medium text-(--color-brand-blue-dark) hover:underline"
-                  >
-                    Reinstate
-                  </button>
-                );
-              },
+              cell: (p) => (
+                <Link
+                  href={`/delivery-partners/${p.id}`}
+                  className={`font-medium hover:underline ${
+                    p.kycStatus === 'pending'
+                      ? 'text-(--color-brand-green-dark)'
+                      : 'text-(--color-brand-blue-dark)'
+                  }`}
+                >
+                  {p.kycStatus === 'pending' ? t.deliveryPartners.review : t.common.view}
+                </Link>
+              ),
             },
           ]}
           rows={rows}

@@ -3,19 +3,21 @@
 import { useActionState } from 'react';
 import { FormError, FormField, FormSubmit, formRowClass, inputClass } from '@/components/FormField';
 import { updateSupportContact, type SupportFormState } from './actions';
+import { useTranslations } from '@/lib/i18n/client';
 import type { PlatformSettings } from '@/lib/types';
 
 const initialState: SupportFormState = {};
 
 export function SupportForm({ settings }: { settings: PlatformSettings }) {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(updateSupportContact, initialState);
 
   return (
     <form action={formAction} className={formRowClass}>
       <FormField
-        label="Support mobile number"
+        label={t.settings.supportMobile}
         htmlFor="supportMobile"
-        hint="Indian mobile, with or without +91. Leave blank to hide it in the app."
+        hint={t.settings.supportMobileHint}
       >
         <input
           id="supportMobile"
@@ -27,7 +29,7 @@ export function SupportForm({ settings }: { settings: PlatformSettings }) {
           className={`w-56 ${inputClass}`}
         />
       </FormField>
-      <FormField label="Support email" htmlFor="supportEmail" hint="Leave blank to hide it in the app.">
+      <FormField label={t.settings.supportEmail} htmlFor="supportEmail" hint={t.settings.supportEmailHint}>
         <input
           id="supportEmail"
           name="supportEmail"
@@ -37,10 +39,10 @@ export function SupportForm({ settings }: { settings: PlatformSettings }) {
           className={`w-64 ${inputClass}`}
         />
       </FormField>
-      <FormSubmit pending={pending} label="Save support contact" pendingLabel="Saving…" />
+      <FormSubmit pending={pending} label={t.settings.saveSupport} pendingLabel={t.settings.saving} />
       <FormError message={state.error} />
       {state.success && !state.error && (
-        <p className="text-sm text-(--color-brand-green-dark) sm:basis-full">Support contact saved.</p>
+        <p className="text-sm text-(--color-brand-green-dark) sm:basis-full">{t.settings.supportSaved}</p>
       )}
     </form>
   );

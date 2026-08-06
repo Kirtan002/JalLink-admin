@@ -6,8 +6,11 @@ import { DataTable } from '@/components/DataTable';
 import { DeliveryStatusBadge } from '@/components/StatusBadge';
 import { formatDate } from '@/lib/format';
 import { MOCK_DELIVERIES } from '@/lib/mockData';
+import { getDictionary } from '@/lib/i18n/server';
 
-export default function DeliveriesPage() {
+export default async function DeliveriesPage() {
+  const t = await getDictionary();
+
   const scheduled = MOCK_DELIVERIES.filter((d) => d.status === 'scheduled').length;
   const delivered = MOCK_DELIVERIES.filter((d) => d.status === 'delivered').length;
   const skipped = MOCK_DELIVERIES.filter((d) => d.status === 'skipped').length;
@@ -15,22 +18,32 @@ export default function DeliveriesPage() {
 
   return (
     <>
-      <PageHeader title="Deliveries" description="Today's scheduled deliveries and recent delivery history across every subscription." />
-      <DemoDataNotice />
+      <PageHeader title={t.deliveries.title} description={t.deliveries.description} />
+      <DemoDataNotice message={t.common.demoNotice} />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Scheduled" value={scheduled} tone="blue" href="/subscriptions?status=active" />
-        <StatCard label="Delivered" value={delivered} tone="green" href="/subscriptions?status=completed" />
-        <StatCard label="Skipped" value={skipped} tone="amber" />
-        <StatCard label="Cancelled" value={cancelled} tone="slate" href="/subscriptions?status=cancelled" />
+        <StatCard label={t.deliveries.scheduled} value={scheduled} tone="blue" href="/subscriptions?status=active" />
+        <StatCard
+          label={t.deliveries.delivered}
+          value={delivered}
+          tone="green"
+          href="/subscriptions?status=completed"
+        />
+        <StatCard label={t.deliveries.skipped} value={skipped} tone="amber" />
+        <StatCard
+          label={t.deliveries.cancelled}
+          value={cancelled}
+          tone="slate"
+          href="/subscriptions?status=cancelled"
+        />
       </div>
 
       <div className="mt-8">
         <DataTable
           columns={[
-            { header: 'Delivery', cell: (d) => <span className="font-medium text-(--color-text)">{d.id}</span> },
+            { header: t.deliveries.delivery, cell: (d) => <span className="font-medium text-(--color-text)">{d.id}</span> },
             {
-              header: 'Customer',
+              header: t.common.customer,
               cell: (d) => (
                 <Link href="/users" className="hover:underline">
                   {d.customerName}
@@ -38,7 +51,7 @@ export default function DeliveriesPage() {
               ),
             },
             {
-              header: 'Plan',
+              header: t.common.plan,
               cell: (d) => (
                 <Link href="/plans" className="hover:underline">
                   {d.planName}
@@ -46,19 +59,19 @@ export default function DeliveriesPage() {
               ),
             },
             {
-              header: 'Delivery partner',
+              header: t.deliveries.deliveryPartner,
               cell: (d) =>
                 d.partnerName ? (
                   <Link href="/delivery-partners" className="hover:underline">
                     {d.partnerName}
                   </Link>
                 ) : (
-                  <span className="text-(--color-text-muted) italic">Unassigned</span>
+                  <span className="text-(--color-text-muted) italic">{t.common.unassigned}</span>
                 ),
             },
-            { header: 'Status', cell: (d) => <DeliveryStatusBadge status={d.status} /> },
+            { header: t.common.status, cell: (d) => <DeliveryStatusBadge status={d.status} /> },
             {
-              header: 'Scheduled',
+              header: t.deliveries.scheduled,
               cell: (d) => <span className="text-(--color-text-muted)">{formatDate(d.scheduledDate)}</span>,
             },
           ]}

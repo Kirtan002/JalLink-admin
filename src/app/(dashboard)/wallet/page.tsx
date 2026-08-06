@@ -9,24 +9,19 @@ import { Card } from '@/components/Card';
 import { Badge } from '@/components/Badge';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { WithdrawForm } from './withdraw-form';
-import type { WalletTxnReason } from '@/lib/types';
-
-const REASON_LABEL: Record<WalletTxnReason, string> = {
-  referral_bonus: 'Referral bonus',
-  platform_share: 'Platform share (no referrer)',
-  wallet_redemption: 'Wallet redemption',
-  withdrawal: 'Withdrawal',
-};
+import { getDictionary } from '@/lib/i18n/server';
 
 export default async function WalletPage() {
+  const t = await getDictionary();
+
   let wallet;
   try {
     wallet = await api.getAdminWallet();
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Could not reach the JalLink API.';
+    const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
     return (
       <>
-        <PageHeader title="Wallet" />
+        <PageHeader title={t.wallet.title} />
         <ErrorBanner message={message} />
       </>
     );
@@ -38,49 +33,68 @@ export default async function WalletPage() {
   return (
     <>
       <PageHeader
-        title="Wallet"
+        title={t.wallet.title}
         description={
           <>
-            The platform&apos;s own wallet — receives a share of every{' '}
+            {t.wallet.descriptionBefore}
             <Link href="/payments" className="font-medium text-(--color-brand-blue-dark) hover:underline">
-              subscription purchase
-            </Link>{' '}
-            from a user with no{' '}
-            <Link href="/referrals" className="font-medium text-(--color-brand-blue-dark) hover:underline">
-              referrer
+              {t.wallet.descriptionPurchase}
             </Link>
-            . Admin can withdraw; regular users never can.
+            {t.wallet.descriptionMiddle}
+            <Link href="/referrals" className="font-medium text-(--color-brand-blue-dark) hover:underline">
+              {t.wallet.descriptionReferrer}
+            </Link>
+            {t.wallet.descriptionAfter}
           </>
         }
       />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard label="Current balance" value={formatCurrency(wallet.balance)} tone="blue" />
-        <StatCard label="Total credited" value={formatCurrency(String(credited))} tone="green" href="/payments" />
-        <StatCard label="Total withdrawn" value={formatCurrency(String(debited))} tone="slate" />
-        <StatCard label="Transactions" value={wallet.transactions.length} tone="amber" />
+        <StatCard label={t.wallet.currentBalance} value={formatCurrency(wallet.balance)} tone="blue" />
+        <StatCard
+          label={t.wallet.totalCredited}
+          value={formatCurrency(String(credited))}
+          tone="green"
+          href="/payments"
+        />
+        <StatCard label={t.wallet.totalWithdrawn} value={formatCurrency(String(debited))} tone="slate" />
+        <StatCard label={t.wallet.transactions} value={wallet.transactions.length} tone="amber" />
       </div>
 
-      <Card title="Withdraw" className="mt-8 mb-8">
+      <Card title={t.wallet.withdraw} className="mt-8 mb-8">
         <WithdrawForm />
       </Card>
 
       {wallet.transactions.length === 0 ? (
-        <EmptyState title="No wallet activity yet" />
+        <EmptyState title={t.wallet.empty} />
       ) : (
         <DataTable
           columns={[
             {
-              header: 'Type',
-              cell: (t) => <Badge tone={t.type === 'credit' ? 'green' : 'slate'}>{t.type === 'credit' ? 'Credit' : 'Debit'}</Badge>,
+              header: t.wallet.type,
+              cell: (txn) => (
+                <Badge tone={txn.type === 'credit' ? 'green' : 'slate'}>
+                  {txn.type === 'credit' ? t.wallet.credit : t.wallet.debit}
+                </Badge>
+              ),
             },
-            { header: 'Amount', cell: (t) => formatCurrency(t.amount) },
-            { header: 'Reason', cell: (t) => <span className="text-(--color-text-muted)">{REASON_LABEL[t.reason]}</span> },
-            { header: 'Note', cell: (t) => <span className="text-(--color-text-muted)">{t.note ?? '—'}</span> },
-            { header: 'Balance after', cell: (t) => formatCurrency(t.balanceAfter) },
+            { header: t.common.amount, cell: (txn) => formatCurrency(txn.amount) },
             {
-              header: 'Time',
-              cell: (t) => <span className="text-(--color-text-muted)">{formatDateTime(t.createdAt)}</span>,
+              header: t.common.reason,
+              cell: (txn) => (
+                <span className="text-(--color-text-muted)">{t.wallet.reasons[txn.reason]}</span>
+              ),
+            },
+            {
+              header: t.common.note,
+              cell: (txn) => <span className="text-(--color-text-muted)">{txn.note ?? t.common.dash}</span>,
+            },
+            { header: t.wallet.balanceAfter, cell: (txn) => formatCurrency(txn.balanceAfter) },
+            {
+              header: t.common.time,
+              cell: (txn) => (
+                <span className="text-(--color-text-muted)">{formatDateTime(txn.createdAt)}</span>
+              ),
             },
           ]}
           rows={wallet.transactions}

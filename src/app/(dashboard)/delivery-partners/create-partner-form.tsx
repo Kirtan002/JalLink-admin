@@ -2,11 +2,13 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 import { FormError, FormField, FormSubmit, formRowClass, inputClass } from '@/components/FormField';
+import { useTranslations } from '@/lib/i18n/client';
 import { createDeliveryPartner, type CreatePartnerState } from './actions';
 
 const initialState: CreatePartnerState = {};
 
 export function CreatePartnerForm() {
+  const t = useTranslations();
   const [state, formAction, pending] = useActionState(createDeliveryPartner, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -18,13 +20,25 @@ export function CreatePartnerForm() {
 
   return (
     <form ref={formRef} action={formAction} className={formRowClass}>
-      <FormField label="Name" htmlFor="name" className="flex-1">
+      <FormField label={t.common.name} htmlFor="name" className="flex-1">
         <input id="name" name="name" type="text" required className={inputClass} />
       </FormField>
-      <FormField label="Mobile" htmlFor="mobile" className="flex-1">
-        <input id="mobile" name="mobile" type="text" placeholder="9876543210" required className={inputClass} />
+      <FormField label={t.common.mobile} htmlFor="mobile" className="flex-1">
+        <input
+          id="mobile"
+          name="mobile"
+          type="tel"
+          inputMode="numeric"
+          placeholder="9876543210"
+          required
+          className={inputClass}
+        />
       </FormField>
-      <FormSubmit pending={pending} label="Add partner" pendingLabel="Adding…" />
+      <FormSubmit
+        pending={pending}
+        label={t.deliveryPartners.addPartner}
+        pendingLabel={t.deliveryPartners.adding}
+      />
       <FormError message={state.error} />
     </form>
   );
