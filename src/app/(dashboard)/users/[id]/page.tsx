@@ -22,13 +22,16 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   const t = await getDictionary();
 
   // Assembled from the list endpoints — there's no /admin/users/:id on the backend yet.
-  let referrals, subscriptions, payments, orders;
+  let referrals, subscriptions, payments, orders, links, payouts, settings;
   try {
-    [referrals, subscriptions, payments, orders] = await Promise.all([
+    [referrals, subscriptions, payments, orders, links, payouts, settings] = await Promise.all([
       api.listReferrals(),
       api.listSubscriptions(),
       api.listPayments(),
       api.listExtraBottleOrders(),
+      api.listReferralLinks(),
+      api.listReferralPayouts(),
+      api.getSettings(),
     ]);
   } catch (err) {
     const message = err instanceof ApiError ? err.message : t.common.apiUnreachable;
@@ -44,6 +47,14 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   const userSubscriptions = subscriptions.filter((s) => s.user.id === id);
   const userPayments = payments.filter((p) => p.user.id === id);
   const userOrders = orders.filter((o) => o.user.id === id);
+  const holdersOfCode = links.filter((l) => l.owner.id === id);
+  const codesHeld = links.filter((l) => l.holder.id === id);
+  const earnedAsHolder = payouts
+    .filter((p) => p.holder.id === id && p.status === 'credited')
+    .reduce((sum, p) => sum + Number(p.rewardAmount), 0);
+  // Only available once this user has bought at least one plan — there's no dedicated
+  // /admin/users/:id endpoint to read it from directly otherwise (see comment above).
+  const programSelection = userSubscriptions[0]?.user.programSelection ?? null;
 
   // Fall back to whatever record mentions them, so a user missing from the referral
   // leaderboard still resolves instead of 404-ing.
@@ -105,31 +116,49 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-        <Card title={t.users.detail.referrals}>
-          {referral ? (
-            <dl className="flex flex-col gap-3 text-sm">
-              <Row label={t.users.referralCode}>
-                <span className="font-mono text-xs">{referral.referralCode}</span>
-              </Row>
-              <Row label={t.users.detail.peopleReferred}>{referral.referredCount}</Row>
-              <Row label={t.users.detail.bonusEarned}>{formatCurrency(referral.totalBonusEarned)}</Row>
-              <Row label={t.users.detail.leaderboard}>
-                <Link href="/referrals" className="text-(--color-brand-blue-dark) hover:underline">
-                  {t.users.detail.viewReferrals}
-                </Link>
-              </Row>
-            </dl>
-          ) : (
-            <p className="text-sm text-(--color-text-muted)">{t.users.detail.noReferralRecord}</p>
-          )}
+        <Card
+          title={t.users.detail.referrals}
+          action={
+            programSelection ? (
+              <Badge tone={programSelection === 'referral' ? 'blue' : 'green'}>
+                {programSelection === 'referral' ? t.users.detail.referralProgram : t.users.detail.discountProgram}
+              </Badge>
+            ) : (
+              <Badge tone="slate">{t.users.detail.programNotChosen}</Badge>
+            )
+          }
+        >
+          <dl className="flex flex-col gap-3 text-sm">
+            <Row label={t.users.referralCode}>
+              <span className="font-mono text-xs">{referral?.referralCode ?? t.common.dash}</span>
+            </Row>
+            <Row label={t.users.detail.holdersOfCode}>
+              {holdersOfCode.length} / {settings.referralMaxGivers}
+            </Row>
+            <Row label={t.users.detail.codesHeld}>
+              {codesHeld.length} / {settings.referralMaxEntries}
+            </Row>
+            <Row label={t.users.detail.totalEarnedAsHolder}>{formatCurrency(String(earnedAsHolder))}</Row>
+            <Row label={t.users.detail.leaderboard}>
+              <Link href="/referrals" className="text-(--color-brand-blue-dark) hover:underline">
+                {t.users.detail.viewReferrals}
+              </Link>
+            </Row>
+          </dl>
         </Card>
 
         <Card title={t.users.detail.address}>
           {latestAddress ? (
             <>
               <p className="text-sm text-(--color-text)">{formatAddress(latestAddress)}</p>
-              <p className="mt-2 text-xs text-(--color-text-muted) capitalize">
-                {interpolate(t.subscriptionDetail.addressType, { type: latestAddress.type })}
+              <p className="mt-2 flex flex-wrap gap-x-2 text-xs text-(--color-text-muted) capitalize">
+                <span>{interpolate(t.subscriptionDetail.addressType, { type: latestAddress.type })}</span>
+                <span>·</span>
+                <span>
+                  {latestAddress.floorType === 'ground_plus_one'
+                    ? t.plans.floorGroundPlusOne
+                    : t.plans.floorHigherFloors}
+                </span>
               </p>
             </>
           ) : (
@@ -161,6 +190,20 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
               },
               { header: t.common.frequency, cell: (s) => formatFrequency(s.frequency) },
               { header: t.subscriptions.bottles, cell: (s) => `${s.totalBottles} × ${s.bottleSizeLtr}L` },
+              {
+                header: t.subscriptionDetail.price,
+                cell: (s) =>
+                  s.discountTier ? (
+                    <span className="whitespace-nowrap">
+                      {formatCurrency(s.finalPrice)}{' '}
+                      <span className="text-xs text-(--color-text-muted)">
+                        ({interpolate(t.subscriptionDetail.tierN, { tier: s.discountTier })} · {s.discountPercent}%)
+                      </span>
+                    </span>
+                  ) : (
+                    formatCurrency(s.finalPrice)
+                  ),
+              },
               {
                 header: t.subscriptions.schedule,
                 cell: (s) => (

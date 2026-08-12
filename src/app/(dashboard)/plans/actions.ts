@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireSession } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
+import type { CreatePlanInput, FloorCategory } from '@/lib/types';
 
 export interface PlanFormState {
   error?: string;
@@ -14,13 +15,16 @@ export interface SettingsFormState {
   success?: boolean;
 }
 
-function parsePlanForm(
-  formData: FormData,
-): { name: string; durationDays: number; bottleSizeLtr: number; price: number } | { error: string } {
+function parsePlanForm(formData: FormData): CreatePlanInput | { error: string } {
   const name = String(formData.get('name') ?? '').trim();
   const durationDays = Number(formData.get('durationDays'));
   const bottleSizeLtr = Number(formData.get('bottleSizeLtr'));
   const price = Number(formData.get('price'));
+  const floorCategory = String(formData.get('floorCategory') ?? '');
+  const tier1Percent = Number(formData.get('tier1Percent'));
+  const tier2Percent = Number(formData.get('tier2Percent'));
+  const tier3Percent = Number(formData.get('tier3Percent'));
+  const tier4Percent = Number(formData.get('tier4Percent'));
 
   if (!name) return { error: 'Name is required' };
   if (!Number.isInteger(durationDays) || durationDays <= 0) {
@@ -29,11 +33,34 @@ function parsePlanForm(
   if (!Number.isInteger(bottleSizeLtr) || bottleSizeLtr <= 0) {
     return { error: 'Bottle size must be a positive whole number' };
   }
-  if (!Number.isInteger(price) || price <= 0) {
-    return { error: 'Price must be a positive whole number of rupees' };
+  if (!Number.isFinite(price) || price <= 0) {
+    return { error: 'Price must be greater than 0' };
+  }
+  if (floorCategory !== 'ground_plus_one' && floorCategory !== 'higher_floors') {
+    return { error: 'Floor category is required' };
+  }
+  for (const [label, value] of [
+    ['Tier 1', tier1Percent],
+    ['Tier 2', tier2Percent],
+    ['Tier 3', tier3Percent],
+    ['Tier 4', tier4Percent],
+  ] as const) {
+    if (!Number.isFinite(value) || value < 0 || value > 100) {
+      return { error: `${label} discount must be between 0 and 100` };
+    }
   }
 
-  return { name, durationDays, bottleSizeLtr, price };
+  return {
+    name,
+    durationDays,
+    bottleSizeLtr,
+    price,
+    floorCategory: floorCategory as FloorCategory,
+    tier1Percent,
+    tier2Percent,
+    tier3Percent,
+    tier4Percent,
+  };
 }
 
 export async function createPlan(_prevState: PlanFormState, formData: FormData): Promise<PlanFormState> {
@@ -104,20 +131,17 @@ export async function updateSettings(
 ): Promise<SettingsFormState> {
   await requireSession();
 
-  const referralDivisor = Number(formData.get('referralDivisor'));
   const extraBottlePricePerUnit = Number(formData.get('extraBottlePricePerUnit'));
 
-  if (!Number.isInteger(referralDivisor) || referralDivisor <= 0) {
-    return { error: 'Referral divisor must be a positive whole number' };
-  }
   if (!Number.isFinite(extraBottlePricePerUnit) || extraBottlePricePerUnit <= 0) {
     return { error: 'Extra bottle price must be a positive number' };
   }
 
-  // Only these two fields — support contact is edited on /settings by its own action, and
-  // PATCH /admin/settings is partial, so neither form clobbers the other's values.
+  // Only this field — support contact is edited on /settings and referral settings on
+  // /referrals, each by their own action, and PATCH /admin/settings is partial, so none of
+  // these forms clobber each other's values.
   try {
-    await api.updateSettings({ referralDivisor, extraBottlePricePerUnit });
+    await api.updateSettings({ extraBottlePricePerUnit });
   } catch (err) {
     return { error: err instanceof ApiError ? err.message : 'Failed to update settings' };
   }

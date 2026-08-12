@@ -22,22 +22,6 @@ export function SettingsForm({ settings }: { settings: PlatformSettings }) {
   return (
     <form ref={formRef} action={formAction} className={formRowClass}>
       <FormField
-        label={t.plans.referralDivisor}
-        htmlFor="referralDivisor"
-        hint={t.plans.referralDivisorHint}
-        className="max-w-md"
-      >
-        <input
-          id="referralDivisor"
-          name="referralDivisor"
-          type="number"
-          min={1}
-          defaultValue={settings.referralDivisor}
-          required
-          className={`w-32 ${inputClass}`}
-        />
-      </FormField>
-      <FormField
         label={t.plans.extraBottlePrice}
         htmlFor="extraBottlePricePerUnit"
         hint={t.plans.extraBottlePriceHint}

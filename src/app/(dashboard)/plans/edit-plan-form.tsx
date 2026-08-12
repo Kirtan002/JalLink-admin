@@ -26,70 +26,101 @@ export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void 
   }, [state.success, onDone]);
 
   return (
-    <form action={formAction} className={formRowClass}>
-      <FormField label={t.plans.planName} htmlFor={`name-${plan.id}`} compact className="flex-1">
-        <input
-          id={`name-${plan.id}`}
-          name="name"
-          type="text"
-          defaultValue={plan.name}
-          required
-          className={inputClass}
-        />
-      </FormField>
-      <FormField label={t.plans.durationDays} htmlFor={`durationDays-${plan.id}`} compact>
-        <input
-          id={`durationDays-${plan.id}`}
-          name="durationDays"
-          type="number"
-          min={1}
-          defaultValue={plan.durationDays}
-          required
-          className={`w-28 ${inputClass}`}
-        />
-      </FormField>
-      <FormField label={t.plans.bottleSize} htmlFor={`bottleSizeLtr-${plan.id}`} compact>
-        <input
-          id={`bottleSizeLtr-${plan.id}`}
-          name="bottleSizeLtr"
-          type="number"
-          min={1}
-          defaultValue={plan.bottleSizeLtr}
-          required
-          className={`w-24 ${inputClass}`}
-        />
-      </FormField>
-      <FormField label={t.plans.price} htmlFor={`price-${plan.id}`} compact>
-        <input
-          id={`price-${plan.id}`}
-          name="price"
-          type="number"
-          min={1}
-          step={1}
-          defaultValue={plan.price}
-          required
-          className={`w-28 ${inputClass}`}
-        />
-      </FormField>
-      <div className="flex flex-col gap-1.5">
-        <FormLabelSpacer compact />
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={pending}
-            className="brand-gradient rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
+    <form action={formAction} className="flex flex-col gap-4">
+      <div className={formRowClass}>
+        <FormField label={t.plans.planName} htmlFor={`name-${plan.id}`} compact className="flex-1">
+          <input
+            id={`name-${plan.id}`}
+            name="name"
+            type="text"
+            defaultValue={plan.name}
+            required
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label={t.plans.durationDays} htmlFor={`durationDays-${plan.id}`} compact>
+          <input
+            id={`durationDays-${plan.id}`}
+            name="durationDays"
+            type="number"
+            min={1}
+            defaultValue={plan.durationDays}
+            required
+            className={`w-28 ${inputClass}`}
+          />
+        </FormField>
+        <FormField label={t.plans.bottleSize} htmlFor={`bottleSizeLtr-${plan.id}`} compact>
+          <input
+            id={`bottleSizeLtr-${plan.id}`}
+            name="bottleSizeLtr"
+            type="number"
+            min={1}
+            defaultValue={plan.bottleSizeLtr}
+            required
+            className={`w-24 ${inputClass}`}
+          />
+        </FormField>
+        <FormField label={t.plans.price} htmlFor={`price-${plan.id}`} compact>
+          <input
+            id={`price-${plan.id}`}
+            name="price"
+            type="number"
+            min={0}
+            step="0.01"
+            defaultValue={plan.price}
+            required
+            className={`w-28 ${inputClass}`}
+          />
+        </FormField>
+        <FormField label={t.plans.floorCategory} htmlFor={`floorCategory-${plan.id}`} compact>
+          <select
+            id={`floorCategory-${plan.id}`}
+            name="floorCategory"
+            required
+            defaultValue={plan.floorCategory}
+            className={inputClass}
           >
-            {pending ? t.plans.saving : t.plans.save}
-          </button>
-          <button
-            type="button"
-            onClick={onDone}
-            className="rounded-lg border border-(--color-border) px-4 py-2.5 text-sm font-medium text-(--color-text-muted) transition hover:bg-(--color-surface-muted)"
-          >
-            {t.common.cancel}
-          </button>
+            <option value="ground_plus_one">{t.plans.floorGroundPlusOne}</option>
+            <option value="higher_floors">{t.plans.floorHigherFloors}</option>
+          </select>
+        </FormField>
+      </div>
+
+      <div className={formRowClass}>
+        <FormField label={t.plans.tier1Percent} htmlFor={`tier1Percent-${plan.id}`} compact>
+          <input id={`tier1Percent-${plan.id}`} name="tier1Percent" type="number" min={0} max={100} step="0.01" defaultValue={plan.tier1Percent} required className={`w-24 ${inputClass}`} />
+        </FormField>
+        <FormField label={t.plans.tier2Percent} htmlFor={`tier2Percent-${plan.id}`} compact>
+          <input id={`tier2Percent-${plan.id}`} name="tier2Percent" type="number" min={0} max={100} step="0.01" defaultValue={plan.tier2Percent} required className={`w-24 ${inputClass}`} />
+        </FormField>
+        <FormField label={t.plans.tier3Percent} htmlFor={`tier3Percent-${plan.id}`} compact>
+          <input id={`tier3Percent-${plan.id}`} name="tier3Percent" type="number" min={0} max={100} step="0.01" defaultValue={plan.tier3Percent} required className={`w-24 ${inputClass}`} />
+        </FormField>
+        <FormField label={t.plans.tier4Percent} htmlFor={`tier4Percent-${plan.id}`} compact>
+          <input id={`tier4Percent-${plan.id}`} name="tier4Percent" type="number" min={0} max={100} step="0.01" defaultValue={plan.tier4Percent} required className={`w-24 ${inputClass}`} />
+        </FormField>
+
+        <div className="flex flex-col gap-1.5">
+          <FormLabelSpacer compact />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={pending}
+              className="brand-gradient rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-60"
+            >
+              {pending ? t.plans.saving : t.plans.save}
+            </button>
+            <button
+              type="button"
+              onClick={onDone}
+              className="rounded-lg border border-(--color-border) px-4 py-2.5 text-sm font-medium text-(--color-text-muted) transition hover:bg-(--color-surface-muted)"
+            >
+              {t.common.cancel}
+            </button>
+          </div>
         </div>
       </div>
+
       <FormError message={state.error} />
     </form>
   );

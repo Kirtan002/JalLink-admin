@@ -14,6 +14,9 @@ import type {
   PaymentConfig,
   PlatformSettings,
   ReferralLeaderboardRow,
+  ReferralLink,
+  ReferralLinkLeaderboardRow,
+  ReferralPayout,
   SubscriptionStatus,
   UpdatePlanInput,
   UpdateSettingsInput,
@@ -155,7 +158,25 @@ export const api = {
       body: JSON.stringify(input),
     }),
 
+  // LEGACY single-referrer program — frozen, historical data only.
   listReferrals: () => apiFetch<ReferralLeaderboardRow[]>('/admin/referrals'),
+
+  // Current referral-links program.
+  listReferralLinks: (params?: { ownerUserId?: string; holderUserId?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.ownerUserId) query.set('ownerUserId', params.ownerUserId);
+    if (params?.holderUserId) query.set('holderUserId', params.holderUserId);
+    const qs = query.toString();
+    return apiFetch<ReferralLink[]>(`/admin/referrals/links${qs ? `?${qs}` : ''}`);
+  },
+  listReferralLinkLeaderboard: () =>
+    apiFetch<ReferralLinkLeaderboardRow[]>('/admin/referrals/links-leaderboard'),
+  listReferralPayouts: () => apiFetch<ReferralPayout[]>('/admin/referrals/payouts'),
+  reverseReferralPayout: (id: string, reason: string) =>
+    apiFetch<ReferralPayout>(`/admin/referrals/payouts/${id}/reverse`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
 
   listExtraBottleOrders: () => apiFetch<AdminExtraBottleOrder[]>('/admin/extra-bottle-orders'),
 

@@ -40,7 +40,7 @@ export default async function PlansPage() {
         }
       />
 
-      <Card title={t.plans.referralPricing} className="mb-8">
+      <Card title={t.plans.pricingSettings} className="mb-8">
         <SettingsForm settings={settings} />
         <div className="mt-4 flex flex-wrap gap-4 border-t border-(--color-border) pt-4 text-sm">
           <Link href="/referrals" className="font-medium text-(--color-brand-blue-dark) hover:underline">

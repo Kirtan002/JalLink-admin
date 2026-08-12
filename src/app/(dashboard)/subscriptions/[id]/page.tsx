@@ -4,6 +4,7 @@ import { api, ApiError } from '@/lib/api';
 import { Card } from '@/components/Card';
 import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
+import { Badge } from '@/components/Badge';
 import { SubscriptionStatusBadge, DeliveryStatusBadge } from '@/components/StatusBadge';
 import { formatAddress, formatCurrency, formatDate, formatFrequency } from '@/lib/format';
 import { interpolate } from '@/lib/i18n/config';
@@ -59,7 +60,18 @@ export default async function SubscriptionDetailPage({
             </Link>
           </>
         }
-        action={<SubscriptionStatusBadge status={subscription.status} />}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            {subscription.user.programSelection && (
+              <Badge tone={subscription.user.programSelection === 'referral' ? 'blue' : 'green'}>
+                {subscription.user.programSelection === 'referral'
+                  ? t.users.detail.referralProgram
+                  : t.users.detail.discountProgram}
+              </Badge>
+            )}
+            <SubscriptionStatusBadge status={subscription.status} />
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -70,7 +82,6 @@ export default async function SubscriptionDetailPage({
                 {subscription.plan.name}
               </Link>
             </Row>
-            <Row label={t.subscriptionDetail.price}>{formatCurrency(subscription.plan.price)}</Row>
             <Row label={t.common.frequency}>{formatFrequency(subscription.frequency)}</Row>
             <Row label={t.subscriptions.bottles}>
               {subscription.totalBottles} × {subscription.bottleSizeLtr}L
@@ -87,10 +98,37 @@ export default async function SubscriptionDetailPage({
           </dl>
         </Card>
 
+        <Card title={t.subscriptionDetail.pricing}>
+          <dl className="flex flex-col gap-3 text-sm">
+            <Row label={t.subscriptionDetail.basePrice}>{formatCurrency(subscription.basePrice)}</Row>
+            <Row label={t.subscriptionDetail.discount}>
+              {subscription.discountTier ? (
+                <>
+                  {subscription.discountPercent}%{' '}
+                  <span className="text-xs text-(--color-text-muted)">
+                    ({interpolate(t.subscriptionDetail.tierN, { tier: subscription.discountTier })})
+                  </span>
+                </>
+              ) : (
+                t.common.dash
+              )}
+            </Row>
+            <Row label={t.subscriptionDetail.price}>
+              <span className="font-semibold text-(--color-text)">{formatCurrency(subscription.finalPrice)}</span>
+            </Row>
+          </dl>
+        </Card>
+
         <Card title={t.subscriptionDetail.address}>
           <p className="text-sm text-(--color-text)">{formatAddress(subscription.address)}</p>
-          <p className="mt-2 text-xs text-(--color-text-muted) capitalize">
-            {interpolate(t.subscriptionDetail.addressType, { type: subscription.address.type })}
+          <p className="mt-2 flex flex-wrap gap-x-2 text-xs text-(--color-text-muted) capitalize">
+            <span>{interpolate(t.subscriptionDetail.addressType, { type: subscription.address.type })}</span>
+            <span>·</span>
+            <span>
+              {subscription.address.floorType === 'ground_plus_one'
+                ? t.plans.floorGroundPlusOne
+                : t.plans.floorHigherFloors}
+            </span>
           </p>
         </Card>
 

@@ -82,9 +82,11 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
           <thead>
             <tr className="border-b border-(--color-border) text-left text-xs tracking-wide text-(--color-text-muted) uppercase">
               <th className="px-5 py-3 font-medium">{t.common.name}</th>
+              <th className="px-5 py-3 font-medium">{t.plans.floorCategory}</th>
               <th className="px-5 py-3 font-medium">{t.plans.duration}</th>
               <th className="px-5 py-3 font-medium">{t.plans.bottleSize}</th>
               <th className="px-5 py-3 font-medium">{t.plans.price}</th>
+              <th className="px-5 py-3 font-medium">{t.plans.discountTiers}</th>
               <th className="px-5 py-3 font-medium">{t.common.status}</th>
               <th className="px-5 py-3 text-right font-medium">{t.plans.actions}</th>
             </tr>
@@ -93,7 +95,7 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
             {plans.map((p) =>
               editingId === p.id ? (
                 <tr key={p.id} className="border-b border-(--color-border) last:border-0">
-                  <td colSpan={6} className="px-5 py-4">
+                  <td colSpan={8} className="px-5 py-4">
                     <EditPlanForm plan={p} onDone={() => setEditingId(null)} />
                   </td>
                 </tr>
@@ -101,10 +103,18 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
                 <tr key={p.id} className="border-b border-(--color-border) last:border-0">
                   <td className="px-5 py-3 font-medium text-(--color-text)">{p.name}</td>
                   <td className="px-5 py-3">
+                    <Badge tone={p.floorCategory === 'ground_plus_one' ? 'blue' : 'slate'}>
+                      {p.floorCategory === 'ground_plus_one' ? t.plans.floorGroundPlusOne : t.plans.floorHigherFloors}
+                    </Badge>
+                  </td>
+                  <td className="px-5 py-3">
                     {interpolate(t.plans.bottlesUnit, { count: p.durationDays })}
                   </td>
                   <td className="px-5 py-3">{p.bottleSizeLtr}L</td>
                   <td className="px-5 py-3">{formatCurrency(p.price)}</td>
+                  <td className="px-5 py-3 font-mono text-xs text-(--color-text-muted)">
+                    {p.tier1Percent}/{p.tier2Percent}/{p.tier3Percent}/{p.tier4Percent}%
+                  </td>
                   <td className="px-5 py-3">
                     <Badge tone={p.isActive ? 'green' : 'slate'}>
                       {p.isActive ? t.plans.active : t.plans.inactive}
@@ -138,6 +148,16 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
                 <dl className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
                     <dt className="text-xs tracking-wide text-(--color-text-muted) uppercase">
+                      {t.plans.floorCategory}
+                    </dt>
+                    <dd className="text-sm">
+                      <Badge tone={p.floorCategory === 'ground_plus_one' ? 'blue' : 'slate'}>
+                        {p.floorCategory === 'ground_plus_one' ? t.plans.floorGroundPlusOne : t.plans.floorHigherFloors}
+                      </Badge>
+                    </dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-xs tracking-wide text-(--color-text-muted) uppercase">
                       {t.plans.duration}
                     </dt>
                     <dd className="text-sm">
@@ -155,6 +175,14 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
                       {t.plans.price}
                     </dt>
                     <dd className="text-sm">{formatCurrency(p.price)}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-xs tracking-wide text-(--color-text-muted) uppercase">
+                      {t.plans.discountTiers}
+                    </dt>
+                    <dd className="font-mono text-xs text-(--color-text-muted)">
+                      {p.tier1Percent}/{p.tier2Percent}/{p.tier3Percent}/{p.tier4Percent}%
+                    </dd>
                   </div>
                 </dl>
                 <div className="mt-3 border-t border-(--color-border) pt-3">{actions(p)}</div>

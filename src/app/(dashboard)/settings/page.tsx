@@ -60,10 +60,10 @@ export default async function SettingsPage() {
       <Card title={t.settings.referralPricing}>
         <p className="text-sm text-(--color-text-muted)">{t.settings.referralPricingHint}</p>
         <Link
-          href="/plans"
+          href="/referrals"
           className="mt-3 inline-block text-sm font-medium text-(--color-brand-blue-dark) hover:underline"
         >
-          {t.settings.editUnderPlans}
+          {t.settings.editUnderReferrals}
         </Link>
       </Card>
     </>

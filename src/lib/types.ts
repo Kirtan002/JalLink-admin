@@ -13,12 +13,27 @@ export type KycDocumentType =
   | 'vehicle_rc'
   | 'selfie';
 
+/** A customer's one-time, permanent choice between the two earning models. Null until set. */
+export type ProgramSelection = 'discount' | 'referral';
+
+/** Ground floor + 1st floor vs everything above — admin maintains a fully separate plan
+ * catalog per category (Plan.floorCategory), and every address records which one it needs
+ * (Address.floorType). */
+export type FloorCategory = 'ground_plus_one' | 'higher_floors';
+
 export interface Plan {
   id: string;
   name: string;
   durationDays: number;
   bottleSizeLtr: number;
   price: string;
+  floorCategory: FloorCategory;
+  /** Discount-program tier percent this plan gives on a buyer's Nth-ever subscription
+   * purchase — tier4Percent is the permanent steady-state rate from the 4th purchase on. */
+  tier1Percent: string;
+  tier2Percent: string;
+  tier3Percent: string;
+  tier4Percent: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -29,10 +44,31 @@ export interface CreatePlanInput {
   durationDays: number;
   bottleSizeLtr: number;
   price: number;
+  floorCategory: FloorCategory;
+  tier1Percent: number;
+  tier2Percent: number;
+  tier3Percent: number;
+  tier4Percent: number;
   isActive?: boolean;
 }
 
 export type UpdatePlanInput = Partial<CreatePlanInput>;
+
+export interface Address {
+  id: string;
+  userId: string;
+  type: 'home' | 'work' | 'other';
+  lineHouse: string;
+  lineStreet: string;
+  landmark: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  floorType: FloorCategory;
+  isDefault: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface DeliveryPartner {
   id: string;
@@ -89,6 +125,12 @@ export interface AdminSubscription {
   frequency: SubscriptionFrequency;
   totalBottles: number;
   bottleSizeLtr: number;
+  /** Pricing snapshot, frozen at purchase time — see modules/subscriptions in the backend. */
+  basePrice: string;
+  discountTier: number | null;
+  discountPercent: string;
+  discountAmount: string;
+  finalPrice: string;
   startDate: string;
   endDate: string;
   status: SubscriptionStatus;
@@ -100,6 +142,7 @@ export interface AdminSubscription {
     id: string;
     name: string | null;
     mobile: string;
+    programSelection: ProgramSelection | null;
   };
   plan: {
     id: string;
@@ -107,6 +150,7 @@ export interface AdminSubscription {
     durationDays: number;
     bottleSizeLtr: number;
     price: string;
+    floorCategory: FloorCategory;
   };
   address: {
     id: string;
@@ -117,6 +161,7 @@ export interface AdminSubscription {
     city: string;
     state: string;
     pincode: string;
+    floorType: FloorCategory;
   };
   deliveryPartner: {
     id: string;
@@ -163,7 +208,8 @@ export type WalletTxnReason =
   | 'wallet_redemption'
   | 'withdrawal'
   | 'referral_reversal'
-  | 'delivery_commission';
+  | 'delivery_commission'
+  | 'referral_payout';
 
 export interface WalletTransaction {
   id: string;
@@ -192,7 +238,12 @@ export interface PaymentConfig {
 
 export interface PlatformSettings {
   id: number;
-  referralDivisor: number;
+  /** Percent of a code owner's purchase price paid to EACH of their holders (not split). */
+  referralRewardPercent: string;
+  /** Max distinct holders a single code owner can have. */
+  referralMaxGivers: number;
+  /** Max distinct owners' codes a single holder can enter. */
+  referralMaxEntries: number;
   extraBottlePricePerUnit: string | null;
   supportMobile: string | null;
   supportEmail: string | null;
@@ -201,13 +252,16 @@ export interface PlatformSettings {
 }
 
 export type UpdateSettingsInput = Partial<{
-  referralDivisor: number;
+  referralRewardPercent: number;
+  referralMaxGivers: number;
+  referralMaxEntries: number;
   extraBottlePricePerUnit: number;
   /** '' clears the stored value. */
   supportMobile: string;
   supportEmail: string;
 }>;
 
+/** LEGACY (single-referrer program, frozen) — see ReferralLinkLeaderboardRow for the current program. */
 export interface ReferralLeaderboardRow {
   id: string;
   name: string | null;
@@ -216,6 +270,50 @@ export interface ReferralLeaderboardRow {
   referredCount: number;
   walletBalance: string;
   totalBonusEarned: string;
+}
+
+export interface ReferralPeer {
+  id: string;
+  name: string | null;
+  mobile: string;
+}
+
+/** A holder/owner edge in the current referral-links program — the holder earns a share
+ * whenever the owner buys a plan (reversed from the old referrer/referred relationship). */
+export interface ReferralLink {
+  id: string;
+  referralCode: string;
+  createdAt: string;
+  owner: ReferralPeer;
+  holder: ReferralPeer;
+}
+
+export type ReferralPayoutStatus = 'pending' | 'credited' | 'reversed';
+
+/** One row per (payment, link) a purchase actually paid out — a single purchase can fund up
+ * to referralMaxGivers payouts at once (one per holder of the buyer's code). */
+export interface ReferralPayout {
+  id: string;
+  status: ReferralPayoutStatus;
+  rewardAmount: string;
+  rewardPercent: string;
+  creditedAt: string | null;
+  reversedAt: string | null;
+  reversalReason: string | null;
+  paymentId: string;
+  subscriptionId: string | null;
+  createdAt: string;
+  owner: ReferralPeer;
+  holder: ReferralPeer;
+}
+
+export interface ReferralLinkLeaderboardRow {
+  id: string;
+  name: string | null;
+  mobile: string;
+  referralCode: string;
+  holdersCount: number;
+  totalPayoutsTriggered: string;
 }
 
 export type ExtraBottleOrderStatus = 'pending_payment' | 'paid' | 'failed' | 'cancelled' | 'delivered';
