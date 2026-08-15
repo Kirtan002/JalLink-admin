@@ -64,6 +64,10 @@ export interface Address {
   city: string;
   state: string;
   pincode: string;
+  /** 1-50, as entered in the app; 1 is the combined "Ground + 1" option. Source of truth
+   * for floorType — the customer never picks the category directly. */
+  floor: number;
+  /** Always server-derived from `floor` (floor <= 1 -> ground_plus_one, else higher_floors). */
   floorType: FloorCategory;
   isDefault: boolean;
   createdAt: string;
@@ -161,6 +165,7 @@ export interface AdminSubscription {
     city: string;
     state: string;
     pincode: string;
+    floor: number;
     floorType: FloorCategory;
   };
   deliveryPartner: {

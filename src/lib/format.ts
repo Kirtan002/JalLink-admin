@@ -27,6 +27,12 @@ export function formatFrequency(frequency: string): string {
   return frequency === 'alternate_days' ? 'Alternate days' : 'Daily';
 }
 
+/** 1 is the combined "Ground + 1" option a customer picks in the app; everything above
+ * that is a literal floor number. See Address.floor / Address.floorType. */
+export function formatFloor(floor: number): string {
+  return floor <= 1 ? 'Ground + 1' : `Floor ${floor}`;
+}
+
 export function formatAddress(address: {
   lineHouse: string;
   lineStreet: string;

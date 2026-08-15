@@ -13,7 +13,7 @@ import {
   PaymentStatusBadge,
   SubscriptionStatusBadge,
 } from '@/components/StatusBadge';
-import { formatAddress, formatCurrency, formatDate, formatDateTime, formatFrequency } from '@/lib/format';
+import { formatAddress, formatCurrency, formatDate, formatDateTime, formatFloor, formatFrequency } from '@/lib/format';
 import { interpolate } from '@/lib/i18n/config';
 import { getDictionary } from '@/lib/i18n/server';
 
@@ -151,13 +151,20 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
           {latestAddress ? (
             <>
               <p className="text-sm text-(--color-text)">{formatAddress(latestAddress)}</p>
-              <p className="mt-2 flex flex-wrap gap-x-2 text-xs text-(--color-text-muted) capitalize">
-                <span>{interpolate(t.subscriptionDetail.addressType, { type: latestAddress.type })}</span>
+              <p className="mt-2 flex flex-wrap gap-x-2 text-xs text-(--color-text-muted)">
+                <span className="capitalize">{interpolate(t.subscriptionDetail.addressType, { type: latestAddress.type })}</span>
                 <span>·</span>
                 <span>
-                  {latestAddress.floorType === 'ground_plus_one'
-                    ? t.plans.floorGroundPlusOne
-                    : t.plans.floorHigherFloors}
+                  {formatFloor(latestAddress.floor)}
+                  {latestAddress.floor > 1 && (
+                    <>
+                      {' '}
+                      ({latestAddress.floorType === 'ground_plus_one'
+                        ? t.plans.floorGroundPlusOne
+                        : t.plans.floorHigherFloors}
+                      )
+                    </>
+                  )}
                 </span>
               </p>
             </>

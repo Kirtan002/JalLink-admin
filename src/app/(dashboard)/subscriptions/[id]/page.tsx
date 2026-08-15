@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { Badge } from '@/components/Badge';
 import { SubscriptionStatusBadge, DeliveryStatusBadge } from '@/components/StatusBadge';
-import { formatAddress, formatCurrency, formatDate, formatFrequency } from '@/lib/format';
+import { formatAddress, formatCurrency, formatDate, formatFloor, formatFrequency } from '@/lib/format';
 import { interpolate } from '@/lib/i18n/config';
 import { getDictionary } from '@/lib/i18n/server';
 import { AssignPartnerForm } from './assign-partner-form';
@@ -121,13 +121,20 @@ export default async function SubscriptionDetailPage({
 
         <Card title={t.subscriptionDetail.address}>
           <p className="text-sm text-(--color-text)">{formatAddress(subscription.address)}</p>
-          <p className="mt-2 flex flex-wrap gap-x-2 text-xs text-(--color-text-muted) capitalize">
-            <span>{interpolate(t.subscriptionDetail.addressType, { type: subscription.address.type })}</span>
+          <p className="mt-2 flex flex-wrap gap-x-2 text-xs text-(--color-text-muted)">
+            <span className="capitalize">{interpolate(t.subscriptionDetail.addressType, { type: subscription.address.type })}</span>
             <span>·</span>
             <span>
-              {subscription.address.floorType === 'ground_plus_one'
-                ? t.plans.floorGroundPlusOne
-                : t.plans.floorHigherFloors}
+              {formatFloor(subscription.address.floor)}
+              {subscription.address.floor > 1 && (
+                <>
+                  {' '}
+                  ({subscription.address.floorType === 'ground_plus_one'
+                    ? t.plans.floorGroundPlusOne
+                    : t.plans.floorHigherFloors}
+                  )
+                </>
+              )}
             </span>
           </p>
         </Card>
