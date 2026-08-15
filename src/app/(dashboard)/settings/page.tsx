@@ -6,6 +6,7 @@ import { Card } from '@/components/Card';
 import { Badge } from '@/components/Badge';
 import { PaymentModeBanner } from '@/components/PaymentModeBanner';
 import { SupportForm } from './support-form';
+import { DeliveryPartnerCommissionForm } from './delivery-partner-commission-form';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { getDictionary } from '@/lib/i18n/server';
 
@@ -50,6 +51,11 @@ export default async function SettingsPage() {
           {t.settings.supportHintAfter}
         </p>
         <SupportForm settings={settings} />
+      </Card>
+
+      <Card title={t.settings.deliveryPartnerCommission} className="mb-8">
+        <p className="mb-5 text-sm text-(--color-text-muted)">{t.settings.deliveryPartnerCommissionHint}</p>
+        <DeliveryPartnerCommissionForm settings={settings} />
       </Card>
 
       <Card title={t.settings.languageTitle} className="mb-8">

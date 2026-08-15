@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { api, ApiError } from '@/lib/api';
+import { getSession } from '@/lib/auth';
 import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { Card } from '@/components/Card';
@@ -9,6 +11,10 @@ import { PartnersTable } from './partners-table';
 
 export default async function DeliveryPartnersPage() {
   const t = await getDictionary();
+  const session = await getSession();
+  // proxy.ts already requires a session to reach this page at all; role only changes what's
+  // rendered below, not whether the page loads.
+  const role = session?.role ?? 'admin';
 
   let partners;
   let wallets: Record<string, string>;
@@ -41,7 +47,20 @@ export default async function DeliveryPartnersPage() {
 
   return (
     <>
-      <PageHeader title={t.deliveryPartners.title} description={t.deliveryPartners.description} />
+      <PageHeader
+        title={t.deliveryPartners.title}
+        description={
+          role === 'manager' ? t.deliveryPartners.descriptionManager : t.deliveryPartners.description
+        }
+        action={
+          <Link
+            href="/delivery-partners/referral-payouts"
+            className="text-sm font-medium text-(--color-brand-blue-dark) hover:underline"
+          >
+            {t.deliveryPartners.viewReferralPayouts}
+          </Link>
+        }
+      />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard
@@ -55,11 +74,13 @@ export default async function DeliveryPartnersPage() {
       </div>
 
       <div className="mt-8">
-        <PartnersTable partners={partners} wallets={wallets} />
+        <PartnersTable partners={partners} wallets={wallets} role={role} />
       </div>
 
       <Card title={t.deliveryPartners.addManually} className="mt-8">
-        <p className="mb-5 text-sm text-(--color-text-muted)">{t.deliveryPartners.addManuallyHint}</p>
+        <p className="mb-5 text-sm text-(--color-text-muted)">
+          {role === 'manager' ? t.deliveryPartners.addManuallyHintManager : t.deliveryPartners.addManuallyHint}
+        </p>
         <CreatePartnerForm />
       </Card>
     </>

@@ -33,6 +33,7 @@ export const en = {
       growth: 'Growth',
       insight: 'Insight',
       configuration: 'Configuration',
+      account: 'Account',
     },
     items: {
       dashboard: 'Dashboard',
@@ -51,6 +52,8 @@ export const en = {
       analytics: 'Analytics',
       activityLog: 'Activity Log',
       settings: 'Settings',
+      profile: 'Profile',
+      managers: 'Managers',
     },
   },
 
@@ -240,6 +243,8 @@ export const en = {
     title: 'Delivery Partners',
     description:
       'Partners sign up in the app and submit KYC documents; nothing about the partner app opens to them until you approve it here. Approved partners can then be assigned to a subscription — the same partner handles every delivery for it.',
+    descriptionManager:
+      "Delivery partners you've added. They still go through the same KYC review as anyone else — admin approves — but you can track their status, assign them to subscriptions, and see what they've earned you.",
     reviewQueue: 'KYC review queue',
     reviewQueueEmpty: 'Nothing waiting for review',
     reviewQueueEmptyHint: 'New KYC submissions land here as partners sign up.',
@@ -250,6 +255,13 @@ export const en = {
     addManually: 'Add a partner manually',
     addManuallyHint:
       'Manual onboarding only — a partner added here is created already approved, on the basis that you have checked their documents yourself. Partners who sign up in the app appear above on their own.',
+    addManuallyHintManager:
+      "Add someone you've recruited. Unlike admin's manual add, they still have to complete KYC in the app before they can start delivering — this just registers them and links them to you.",
+    referralCode: 'Referral code',
+    addedBy: 'Added by',
+    addedByManager: 'Manager',
+    addedByAdminOrSelf: 'Self / Admin',
+    viewReferralPayouts: 'Referral payouts →',
     addPartner: 'Add partner',
     adding: 'Adding…',
     nameAndMobileRequired: 'Name and mobile are both required',
@@ -321,6 +333,7 @@ export const en = {
       decision: 'Decision',
       decisionHint:
         'Approving opens the partner app to them immediately. Rejecting requires a reason, which they see verbatim and can act on before submitting again.',
+      kycAdminOnly: 'Only admin can approve or reject KYC submissions.',
       alreadyDecided: 'This submission has already been reviewed.',
       notSubmitted: 'This partner has not submitted any documents to review yet.',
       rejectedNotice: 'Rejected on {date}: {reason}',
@@ -329,6 +342,20 @@ export const en = {
         'Independent of KYC. Suspending blocks sign-in immediately and leaves the KYC decision untouched, so reinstating never means re-reviewing documents.',
       reviewedBy: 'Reviewed by {actor} on {date}',
       partnerSince: 'Partner since {date}',
+    },
+    referralPayouts: {
+      title: 'Delivery Partner Referral Payouts',
+      description:
+        "Every purchase where a buyer entered a delivery partner's own code at checkout, and what it paid the partner and (if any) their manager. Separate from the Referrals program.",
+      back: '← All delivery partners',
+      totalPayouts: 'Total payouts',
+      totalPartnerAmount: 'Paid to partners',
+      totalManagerAmount: 'Paid to managers',
+      buyer: 'Buyer',
+      partnerAmount: 'Partner earned',
+      managerAmount: 'Manager earned',
+      empty: 'No referral payouts yet',
+      emptyHint: "They'll show up here once a customer enters a delivery partner's code at checkout.",
     },
   },
 
@@ -556,7 +583,7 @@ export const en = {
   activityLog: {
     title: 'Activity Log',
     description:
-      "History of admin-panel mutations — plan/settings/wallet changes and who made them. The 'actor' is this panel's single shared login, not per-admin auth, so it names the account, not necessarily the individual.",
+      "History of admin-panel mutations — plan/settings/wallet changes and who made them. The 'actor' is the signed-in admin or manager's username.",
     empty: 'No activity yet',
     emptyHint: 'Admin actions will show up here as they happen.',
     actor: 'Actor',
@@ -565,9 +592,47 @@ export const en = {
     details: 'Details',
   },
 
+  profile: {
+    title: 'My Profile',
+    description: 'Your account details and personal wallet.',
+    accountDetails: 'Account details',
+    role: 'Role',
+    roleAdmin: 'Admin — full access',
+    roleManager: 'Manager — limited access',
+  },
+
+  managers: {
+    title: 'Managers',
+    description:
+      "Staff accounts with admin-panel access. A manager signs in the same way an admin does, but for now only reaches their own Profile page — everything else here stays admin-only.",
+    addManager: 'Add a manager',
+    addManagerHint: 'They can sign in immediately with the username and password set here.',
+    username: 'Username',
+    password: 'Password',
+    usernameHint: 'Letters, numbers, dots, underscores and hyphens only.',
+    passwordHint: 'At least 8 characters.',
+    role: 'Role',
+    roleAdmin: 'Admin',
+    roleManager: 'Manager',
+    create: 'Create account',
+    creating: 'Creating…',
+    createFailed: 'Failed to create account',
+    fieldsRequired: 'Name, username and password are all required',
+    empty: 'No staff accounts yet',
+    emptyHint: 'Add one above.',
+    status: 'Status',
+    active: 'Active',
+    inactive: 'Inactive',
+    deactivate: 'Deactivate',
+    reactivate: 'Reactivate',
+    actionFailed: 'The action could not be completed',
+    you: 'You',
+  },
+
   settings: {
     title: 'Settings',
-    description: 'Platform-wide configuration. Referral program settings live under Referrals.',
+    description:
+      'Platform-wide configuration. Referral-links program settings live under Referrals; delivery-partner referral commission is below.',
     shortDescription: 'Platform-wide configuration.',
     supportLive: 'Support live',
     supportNotSet: 'Support not set',
@@ -584,6 +649,14 @@ export const en = {
     supportSaved: 'Support contact saved.',
     save: 'Save',
     saving: 'Saving…',
+    deliveryPartnerCommission: 'Delivery partner referral commission',
+    deliveryPartnerCommissionHint:
+      "Flat amounts paid when a customer enters a delivery partner's own code at checkout — separate from the referral-links program below. The partner amount is always paid; the manager amount only if that partner was added by a manager.",
+    deliveryPartnerAmount: 'Delivery partner amount (₹)',
+    deliveryPartnerAmountHint: 'Paid to the delivery partner on every qualifying purchase.',
+    managerAmount: 'Manager amount (₹)',
+    managerAmountHint: "Paid to the partner's manager, only if they have one.",
+    deliveryPartnerCommissionSaved: 'Commission settings saved.',
     referralPricing: 'Referral & pricing',
     referralPricingHint:
       'The referral program settings are edited on the Referrals page; the flat extra-bottle price is edited on Plans.',

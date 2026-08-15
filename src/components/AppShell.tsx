@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslations } from '@/lib/i18n/client';
+import type { AdminRole } from '@/lib/types';
 import { Logo } from './Logo';
 import { Sidebar } from './Sidebar';
 
@@ -15,7 +16,15 @@ import { Sidebar } from './Sidebar';
  * `children` is server-rendered and passed straight through: marking this file `'use client'`
  * costs nothing but the drawer state itself.
  */
-export function AppShell({ username, children }: { username: string; children: ReactNode }) {
+export function AppShell({
+  username,
+  role,
+  children,
+}: {
+  username: string;
+  role: AdminRole;
+  children: ReactNode;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const t = useTranslations();
 
@@ -47,7 +56,7 @@ export function AppShell({ username, children }: { username: string; children: R
         />
       )}
 
-      <Sidebar username={username} open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Sidebar username={username} role={role} open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-(--color-border) bg-(--color-surface) px-4 py-3 lg:hidden">

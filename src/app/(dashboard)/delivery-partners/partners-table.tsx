@@ -4,11 +4,12 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DataTable } from '@/components/DataTable';
 import { EmptyState } from '@/components/EmptyState';
+import { Badge } from '@/components/Badge';
 import { PartnerKycStatusBadge } from '@/components/StatusBadge';
 import { formatDate } from '@/lib/format';
 import { useTranslations } from '@/lib/i18n/client';
 import { interpolate } from '@/lib/i18n/config';
-import type { DeliveryPartner } from '@/lib/types';
+import type { AdminRole, DeliveryPartner } from '@/lib/types';
 import { PartnerWalletCell } from './wallet-cell';
 
 /** 'suspended' is not a KYC status — it is the `isActive` flag — but it is what an operator
@@ -24,9 +25,11 @@ function matches(partner: DeliveryPartner, filter: Filter): boolean {
 export function PartnersTable({
   partners,
   wallets,
+  role,
 }: {
   partners: DeliveryPartner[];
   wallets: Record<string, string>;
+  role: AdminRole;
 }) {
   const t = useTranslations();
   const [filter, setFilter] = useState<Filter>('all');
@@ -112,6 +115,24 @@ export function PartnersTable({
               ),
             },
             {
+              header: t.deliveryPartners.referralCode,
+              cell: (p) => <span className="font-mono text-xs text-(--color-text)">{p.referralCode}</span>,
+            },
+            // Only meaningful to an admin browsing everyone's partners — for a manager every
+            // row here is already their own.
+            ...(role === 'admin'
+              ? [
+                  {
+                    header: t.deliveryPartners.addedBy,
+                    cell: (p: DeliveryPartner) => (
+                      <Badge tone={p.managerId ? 'amber' : 'slate'}>
+                        {p.managerId ? t.deliveryPartners.addedByManager : t.deliveryPartners.addedByAdminOrSelf}
+                      </Badge>
+                    ),
+                  },
+                ]
+              : []),
+            {
               header: t.common.added,
               cell: (p) => (
                 <span className="text-(--color-text-muted)">
@@ -128,7 +149,11 @@ export function PartnersTable({
               align: 'right',
               cell: (p) =>
                 p.kycStatus === 'approved' ? (
-                  <PartnerWalletCell partnerId={p.id} balance={wallets[p.id] ?? '0.00'} />
+                  <PartnerWalletCell
+                    partnerId={p.id}
+                    balance={wallets[p.id] ?? '0.00'}
+                    canWithdraw={role === 'admin'}
+                  />
                 ) : (
                   <span className="text-(--color-text-muted)">{t.common.dash}</span>
                 ),

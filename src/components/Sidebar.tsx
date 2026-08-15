@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { logout } from '@/app/(dashboard)/actions';
 import { useTranslations } from '@/lib/i18n/client';
 import type { Dictionary } from '@/lib/i18n/dictionaries';
+import type { AdminRole } from '@/lib/types';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { Logo } from './Logo';
 
@@ -14,8 +15,13 @@ import { Logo } from './Logo';
  */
 type NavGroupKey = keyof Dictionary['nav']['groups'];
 type NavItemKey = keyof Dictionary['nav']['items'];
+type NavGroup = { key: NavGroupKey; items: { href: string; key: NavItemKey }[] };
 
-const NAV_GROUPS: { key: NavGroupKey; items: { href: string; key: NavItemKey }[] }[] = [
+// Full-access nav — everything an 'admin' sees. A 'manager' sees none of this (see
+// MANAGER_NAV_GROUPS below); keep proxy.ts's MANAGER_ALLOWED_PREFIXES in sync with whatever
+// a manager is granted here, since the sidebar is a display concern and proxy.ts is the
+// actual gate.
+const ADMIN_NAV_GROUPS: NavGroup[] = [
   {
     key: 'overview',
     items: [{ href: '/', key: 'dashboard' }],
@@ -58,20 +64,46 @@ const NAV_GROUPS: { key: NavGroupKey; items: { href: string; key: NavItemKey }[]
     key: 'configuration',
     items: [{ href: '/settings', key: 'settings' }],
   },
+  {
+    key: 'account',
+    items: [
+      { href: '/profile', key: 'profile' },
+      { href: '/managers', key: 'managers' },
+    ],
+  },
+];
+
+// A manager's entire panel: their own profile/wallet, plus the delivery partners *they*
+// registered (list, detail, KYC status, and the referral-payout ledger attributed to them —
+// all scoped server-side by the manager's Bearer token). No customer, subscription, payment or
+// platform-wallet data — see the original scoping in db/schema.ts's admins table comment on
+// the backend.
+const MANAGER_NAV_GROUPS: NavGroup[] = [
+  {
+    key: 'operations',
+    items: [{ href: '/delivery-partners', key: 'deliveryPartners' }],
+  },
+  {
+    key: 'account',
+    items: [{ href: '/profile', key: 'profile' }],
+  },
 ];
 
 export function Sidebar({
   username,
+  role,
   open,
   onClose,
 }: {
   username: string;
+  role: AdminRole;
   /** Mobile only — on `lg` and up the sidebar is always in the layout. */
   open: boolean;
   onClose: () => void;
 }) {
   const pathname = usePathname();
   const t = useTranslations();
+  const navGroups = role === 'manager' ? MANAGER_NAV_GROUPS : ADMIN_NAV_GROUPS;
 
   // Below `lg` this is an off-canvas drawer; from `lg` it is the permanent column, where
   // sticky + h-screen pin it while only the page content scrolls. `invisible` (not just a
@@ -98,7 +130,7 @@ export function Sidebar({
       </div>
 
       <nav className="flex flex-1 flex-col gap-7">
-        {NAV_GROUPS.map((group) => (
+        {navGroups.map((group) => (
           <div key={group.key}>
             {/* Headings are deliberately dimmer, smaller and wider-tracked than the items
                 below them, so a group label never reads as something you can click. */}

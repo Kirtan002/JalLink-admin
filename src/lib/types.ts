@@ -79,6 +79,13 @@ export interface DeliveryPartner {
   /** Null between self-signup and the first KYC submission, which is what sets it. */
   name: string | null;
   mobile: string;
+  /** This partner's own code — a customer enters it at checkout to attribute a purchase to
+   * them (and, if managerId is set, to their manager). Independent of the user-to-user
+   * referral-links program. */
+  referralCode: string;
+  /** Set only when this partner was created from a manager's own portal — null for
+   * self-signups and admin-created partners. */
+  managerId: string | null;
   isActive: boolean;
   kycStatus: DeliveryPartnerKycStatus;
   kycSubmittedAt: string | null;
@@ -250,6 +257,11 @@ export interface PlatformSettings {
   /** Max distinct owners' codes a single holder can enter. */
   referralMaxEntries: number;
   extraBottlePricePerUnit: string | null;
+  /** Flat ₹ paid to a delivery partner when a buyer enters that partner's own referralCode at
+   * checkout — always paid. Independent of referralRewardPercent above (a different program). */
+  deliveryPartnerReferralPartnerAmount: string;
+  /** Flat ₹ paid to that partner's manager on the same event — only when the partner has one. */
+  deliveryPartnerReferralManagerAmount: string;
   supportMobile: string | null;
   supportEmail: string | null;
   createdAt: string;
@@ -261,10 +273,27 @@ export type UpdateSettingsInput = Partial<{
   referralMaxGivers: number;
   referralMaxEntries: number;
   extraBottlePricePerUnit: number;
+  deliveryPartnerReferralPartnerAmount: number;
+  deliveryPartnerReferralManagerAmount: number;
   /** '' clears the stored value. */
   supportMobile: string;
   supportEmail: string;
 }>;
+
+/** One payment that redeemed a delivery partner's own referralCode — see
+ * DeliveryPartner.referralCode. A manager only sees payouts attributed to them; admin sees all. */
+export interface DeliveryPartnerReferralPayout {
+  id: string;
+  referralCode: string;
+  partnerAmount: string;
+  managerAmount: string;
+  paymentId: string;
+  subscriptionId: string | null;
+  createdAt: string;
+  deliveryPartner: { id: string; name: string | null; mobile: string };
+  manager: { id: string; name: string; username: string } | null;
+  buyer: { id: string; name: string | null; mobile: string };
+}
 
 /** LEGACY (single-referrer program, frozen) — see ReferralLinkLeaderboardRow for the current program. */
 export interface ReferralLeaderboardRow {
@@ -346,3 +375,36 @@ export interface AdminAuditLog {
   details: unknown;
   createdAt: string;
 }
+
+/** 'admin' is full access; 'manager' is the same account shape with intentionally limited
+ * access — see jallink-auth-service's db/schema.ts adminRoleEnum. */
+export type AdminRole = 'admin' | 'manager';
+
+export interface AdminProfile {
+  id: string;
+  name: string;
+  username: string;
+  role: AdminRole;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminLoginResult {
+  admin: AdminProfile;
+  accessToken: string;
+}
+
+export interface CreateAdminStaffInput {
+  name: string;
+  username: string;
+  password: string;
+  role: AdminRole;
+}
+
+export type UpdateAdminStaffInput = Partial<{
+  name: string;
+  password: string;
+  role: AdminRole;
+  isActive: boolean;
+}>;

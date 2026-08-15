@@ -7,7 +7,17 @@ import { useTranslations } from '@/lib/i18n/client';
 
 const initialState: WithdrawPartnerWalletState = {};
 
-export function PartnerWalletCell({ partnerId, balance }: { partnerId: string; balance: string }) {
+export function PartnerWalletCell({
+  partnerId,
+  balance,
+  canWithdraw,
+}: {
+  partnerId: string;
+  balance: string;
+  /** Withdrawal is admin-only server-side (moving real money out of a partner's wallet isn't
+   * delegated to managers) — a 'manager' session gets a read-only balance instead of the form. */
+  canWithdraw: boolean;
+}) {
   const t = useTranslations();
   const boundAction = withdrawDeliveryPartnerWallet.bind(null, partnerId);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
@@ -18,6 +28,10 @@ export function PartnerWalletCell({ partnerId, balance }: { partnerId: string; b
       formRef.current?.reset();
     }
   }, [state.success]);
+
+  if (!canWithdraw) {
+    return <span className="font-medium text-(--color-text)">{formatCurrency(balance)}</span>;
+  }
 
   return (
     <div className="flex flex-col items-end gap-1">

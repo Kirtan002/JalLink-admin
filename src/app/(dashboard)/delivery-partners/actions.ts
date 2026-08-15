@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { requireSession } from '@/lib/auth';
+import { requireAdminRole, requireSession } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
 import { getDictionary } from '@/lib/i18n/server';
 
@@ -59,7 +59,9 @@ export async function withdrawDeliveryPartnerWallet(
   _prevState: WithdrawPartnerWalletState,
   formData: FormData,
 ): Promise<WithdrawPartnerWalletState> {
-  await requireSession();
+  // Admin-only server-side — the wallet cell already hides this form for a manager session;
+  // this is what stops a forged POST straight at the action.
+  await requireAdminRole();
   const t = await getDictionary();
 
   const amount = Number(formData.get('amount'));
@@ -82,7 +84,9 @@ export async function approvePartnerKyc(
   _prevState: KycReviewState,
   formData: FormData,
 ): Promise<KycReviewState> {
-  await requireSession();
+  // Admin-only server-side, even for a manager's own partner — identity verification stays
+  // centralized. The detail page already hides the review panel for a manager session.
+  await requireAdminRole();
   const t = await getDictionary();
 
   const note = String(formData.get('note') ?? '').trim();
@@ -108,7 +112,8 @@ export async function rejectPartnerKyc(
   _prevState: KycReviewState,
   formData: FormData,
 ): Promise<KycReviewState> {
-  await requireSession();
+  // Admin-only server-side — see approvePartnerKyc above.
+  await requireAdminRole();
   const t = await getDictionary();
 
   const reason = String(formData.get('reason') ?? '').trim();

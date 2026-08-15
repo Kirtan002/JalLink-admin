@@ -1,13 +1,17 @@
 import type {
   AdminAuditLog,
   AdminExtraBottleOrder,
+  AdminLoginResult,
   AdminPayment,
+  AdminProfile,
   AdminSubscription,
+  CreateAdminStaffInput,
   CreatePlanInput,
   Delivery,
   DeliveryPartner,
   DeliveryPartnerDetail,
   DeliveryPartnerKycStatus,
+  DeliveryPartnerReferralPayout,
   PaymentPurpose,
   PaymentStatus,
   Plan,
@@ -18,10 +22,12 @@ import type {
   ReferralLinkLeaderboardRow,
   ReferralPayout,
   SubscriptionStatus,
+  UpdateAdminStaffInput,
   UpdatePlanInput,
   UpdateSettingsInput,
   WalletSummary,
 } from './types';
+import { getSession } from './auth';
 
 const API_BASE_URL = process.env.API_BASE_URL ?? 'https://jallink-backend.onrender.com';
 
@@ -44,13 +50,23 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   // terminal, not the browser console. Exactly what backend URL each admin call is hitting.
   console.log(`[api] ${method} ${url}`);
 
+  // Absent before login (e.g. the login call itself) and on any request made outside a
+  // session — those fall back to the shared ADMIN_USERNAME the way every call used to.
+  const session = await getSession().catch(() => null);
+
   const res = await fetch(url, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
-      // Attributes /admin/* writes to a name in the backend's audit log — not auth, just
-      // the one shared ADMIN_USERNAME this panel logs in with (see lib/session.ts).
-      'X-Admin-Actor': process.env.ADMIN_USERNAME ?? 'unknown',
+      // Attributes /admin/* writes to a name in the backend's audit log. Once an admin/
+      // manager has logged in for real, this is their actual username; requireAdminAuth on
+      // the backend also derives the same label independently from the Bearer token below
+      // for the routes it gates (see JalLink middleware/adminAuth.ts).
+      'X-Admin-Actor': session?.username ?? process.env.ADMIN_USERNAME ?? 'unknown',
+      // Real per-admin identity for the routes that check it (POST/PATCH /admin/admins,
+      // GET /admin/auth/me*). Harmless to send on every other /admin/* route too — nothing
+      // there reads it yet.
+      ...(session?.accessToken ? { Authorization: `Bearer ${session.accessToken}` } : {}),
       // The actual gate on /admin/*. Optional here because a development backend started
       // without ADMIN_API_KEY leaves those routes open; a production backend refuses to boot
       // without one, so an unset value there turns every admin call into a 401.
@@ -128,6 +144,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  /** The delivery-partner-referral payout ledger — an 'admin' session sees every payout, a
+   * 'manager' session only the ones attributed to them (backend-scoped by the Bearer token). */
+  listDeliveryPartnerReferralPayouts: () =>
+    apiFetch<DeliveryPartnerReferralPayout[]>('/admin/delivery-partners/referral-payouts'),
 
   listSubscriptions: (status?: SubscriptionStatus) =>
     apiFetch<AdminSubscription[]>(`/admin/subscriptions${status ? `?status=${status}` : ''}`),
@@ -184,4 +204,21 @@ export const api = {
 
   /** Public endpoint — tells us whether the API is pointed at Razorpay test or live keys. */
   getPaymentConfig: () => apiFetch<PaymentConfig>('/payments/config'),
+
+  // --- admin/manager identity ------------------------------------------------
+  // No session exists yet when this one is called (it's what creates the session) — the
+  // Bearer header above is simply absent for this call, which is fine, POST /admin/auth/login
+  // only needs the shared X-Admin-Key.
+  adminLogin: (username: string, password: string) =>
+    apiFetch<AdminLoginResult>('/admin/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  getMyAdminProfile: () => apiFetch<AdminProfile>('/admin/auth/me'),
+  getMyAdminWallet: () => apiFetch<WalletSummary>('/admin/auth/me/wallet'),
+
+  // Admin-only staff management (creating/deactivating managers). A manager calling these
+  // gets ADMIN_ROLE_NOT_ALLOWED from the backend.
+  listAdminStaff: () => apiFetch<AdminProfile[]>('/admin/admins'),
+  createAdminStaff: (input: CreateAdminStaffInput) =>
+    apiFetch<AdminProfile>('/admin/admins', { method: 'POST', body: JSON.stringify(input) }),
+  updateAdminStaff: (id: string, input: UpdateAdminStaffInput) =>
+    apiFetch<AdminProfile>(`/admin/admins/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
 };

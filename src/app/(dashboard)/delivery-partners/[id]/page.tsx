@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { api, ApiError } from '@/lib/api';
+import { getSession } from '@/lib/auth';
 import { PageHeader } from '@/components/PageHeader';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { Card } from '@/components/Card';
@@ -81,6 +82,8 @@ export default async function DeliveryPartnerDetailPage({
 }) {
   const { id } = await params;
   const t = await getDictionary();
+  const session = await getSession();
+  const isAdmin = (session?.role ?? 'admin') === 'admin';
 
   let partner;
   try {
@@ -140,11 +143,20 @@ export default async function DeliveryPartnerDetailPage({
       )}
 
       <Card title={t.deliveryPartners.detail.decision} className="mb-8">
-        <KycReviewPanel partnerId={partner.id} kycStatus={partner.kycStatus} />
+        {isAdmin ? (
+          <KycReviewPanel partnerId={partner.id} kycStatus={partner.kycStatus} />
+        ) : (
+          <p className="text-sm text-(--color-text-muted)">{t.deliveryPartners.detail.kycAdminOnly}</p>
+        )}
       </Card>
 
       <Card title={t.deliveryPartners.detail.identity} className="mb-8">
         <dl className="divide-y divide-(--color-border)">
+          <DetailRow label={t.deliveryPartners.referralCode} value={partner.referralCode} />
+          <DetailRow
+            label={t.deliveryPartners.addedBy}
+            value={partner.managerId ? t.deliveryPartners.addedByManager : t.deliveryPartners.addedByAdminOrSelf}
+          />
           <DetailRow label={t.deliveryPartners.detail.fullName} value={partner.fullName} />
           <DetailRow
             label={t.deliveryPartners.detail.dob}

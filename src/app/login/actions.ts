@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { verifyCredentials } from '@/lib/session';
+import { api, ApiError } from '@/lib/api';
 import { createSession } from '@/lib/auth';
 
 export interface LoginState {
@@ -17,10 +17,26 @@ export async function login(_prevState: LoginState, formData: FormData): Promise
     return { error: 'Enter both username and password' };
   }
 
-  if (!verifyCredentials(username, password)) {
-    return { error: 'Invalid username or password' };
+  let result;
+  try {
+    result = await api.adminLogin(username, password);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      return { error: err.message };
+    }
+    return { error: 'Could not reach the JalLink API.' };
   }
 
-  await createSession();
-  redirect(next.startsWith('/') ? next : '/');
+  await createSession({
+    adminId: result.admin.id,
+    name: result.admin.name,
+    username: result.admin.username,
+    role: result.admin.role,
+    accessToken: result.accessToken,
+  });
+
+  // A manager has no dashboard/users/etc. screens (see proxy.ts) — send them straight to the
+  // one page they can actually use rather than bouncing off `/` immediately after landing.
+  const fallback = result.admin.role === 'manager' ? '/profile' : '/';
+  redirect(next.startsWith('/') ? next : fallback);
 }
