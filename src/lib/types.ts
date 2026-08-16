@@ -16,9 +16,9 @@ export type KycDocumentType =
 /** A customer's one-time, permanent choice between the two earning models. Null until set. */
 export type ProgramSelection = 'discount' | 'referral';
 
-/** Ground floor + 1st floor vs everything above — admin maintains a fully separate plan
- * catalog per category (Plan.floorCategory), and every address records which one it needs
- * (Address.floorType). */
+/** Ground floor + 1st floor vs everything above — a plan is one catalog entry sold at one of
+ * two prices (Plan.priceGroundPlusOne / .priceHigherFloors), and every address records which
+ * one it pays (Address.floorType). */
 export type FloorCategory = 'ground_plus_one' | 'higher_floors';
 
 export interface Plan {
@@ -26,10 +26,13 @@ export interface Plan {
   name: string;
   durationDays: number;
   bottleSizeLtr: number;
-  price: string;
-  floorCategory: FloorCategory;
+  /** Charged when the buyer's address has floor 0 or 1. */
+  priceGroundPlusOne: string;
+  /** Charged when the buyer's address has floor 2 or above. */
+  priceHigherFloors: string;
   /** Discount-program tier percent this plan gives on a buyer's Nth-ever subscription
-   * purchase — tier4Percent is the permanent steady-state rate from the 4th purchase on. */
+   * purchase — tier4Percent is the permanent steady-state rate from the 4th purchase on.
+   * Applies to whichever of the two prices above is being charged. */
   tier1Percent: string;
   tier2Percent: string;
   tier3Percent: string;
@@ -43,8 +46,8 @@ export interface CreatePlanInput {
   name: string;
   durationDays: number;
   bottleSizeLtr: number;
-  price: number;
-  floorCategory: FloorCategory;
+  priceGroundPlusOne: number;
+  priceHigherFloors: number;
   tier1Percent: number;
   tier2Percent: number;
   tier3Percent: number;
@@ -64,10 +67,12 @@ export interface Address {
   city: string;
   state: string;
   pincode: string;
-  /** 1-50, as entered in the app; 1 is the combined "Ground + 1" option. Source of truth
-   * for floorType — the customer never picks the category directly. */
+  /** 0-50, as entered in the app: 0 is the ground floor, 1 the first floor, 2-50 literal
+   * floor numbers above that. Source of truth for floorType — the customer never picks the
+   * price tier directly. */
   floor: number;
-  /** Always server-derived from `floor` (floor <= 1 -> ground_plus_one, else higher_floors). */
+  /** Always server-derived from `floor` (floor <= 1 -> ground_plus_one, else higher_floors —
+   * covers both 0 and 1). */
   floorType: FloorCategory;
   isDefault: boolean;
   createdAt: string;
@@ -160,8 +165,8 @@ export interface AdminSubscription {
     name: string;
     durationDays: number;
     bottleSizeLtr: number;
-    price: string;
-    floorCategory: FloorCategory;
+    priceGroundPlusOne: string;
+    priceHigherFloors: string;
   };
   address: {
     id: string;

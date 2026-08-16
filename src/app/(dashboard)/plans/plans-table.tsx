@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Badge } from '@/components/Badge';
 import { EmptyState } from '@/components/EmptyState';
+import { Badge } from '@/components/Badge';
 import { formatCurrency } from '@/lib/format';
 import { useTranslations } from '@/lib/i18n/client';
 import { interpolate } from '@/lib/i18n/config';
@@ -82,10 +82,10 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
           <thead>
             <tr className="border-b border-(--color-border) text-left text-xs tracking-wide text-(--color-text-muted) uppercase">
               <th className="px-5 py-3 font-medium">{t.common.name}</th>
-              <th className="px-5 py-3 font-medium">{t.plans.floorCategory}</th>
               <th className="px-5 py-3 font-medium">{t.plans.duration}</th>
               <th className="px-5 py-3 font-medium">{t.plans.bottleSize}</th>
-              <th className="px-5 py-3 font-medium">{t.plans.price}</th>
+              <th className="px-5 py-3 font-medium">{t.plans.priceGroundPlusOne}</th>
+              <th className="px-5 py-3 font-medium">{t.plans.priceHigherFloors}</th>
               <th className="px-5 py-3 font-medium">{t.plans.discountTiers}</th>
               <th className="px-5 py-3 font-medium">{t.common.status}</th>
               <th className="px-5 py-3 text-right font-medium">{t.plans.actions}</th>
@@ -103,15 +103,11 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
                 <tr key={p.id} className="border-b border-(--color-border) last:border-0">
                   <td className="px-5 py-3 font-medium text-(--color-text)">{p.name}</td>
                   <td className="px-5 py-3">
-                    <Badge tone={p.floorCategory === 'ground_plus_one' ? 'blue' : 'slate'}>
-                      {p.floorCategory === 'ground_plus_one' ? t.plans.floorGroundPlusOne : t.plans.floorHigherFloors}
-                    </Badge>
-                  </td>
-                  <td className="px-5 py-3">
                     {interpolate(t.plans.bottlesUnit, { count: p.durationDays })}
                   </td>
                   <td className="px-5 py-3">{p.bottleSizeLtr}L</td>
-                  <td className="px-5 py-3">{formatCurrency(p.price)}</td>
+                  <td className="px-5 py-3">{formatCurrency(p.priceGroundPlusOne)}</td>
+                  <td className="px-5 py-3">{formatCurrency(p.priceHigherFloors)}</td>
                   <td className="px-5 py-3 font-mono text-xs text-(--color-text-muted)">
                     {p.tier1Percent}/{p.tier2Percent}/{p.tier3Percent}/{p.tier4Percent}%
                   </td>
@@ -148,16 +144,6 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
                 <dl className="flex flex-col gap-2">
                   <div className="flex items-start justify-between gap-3">
                     <dt className="text-xs tracking-wide text-(--color-text-muted) uppercase">
-                      {t.plans.floorCategory}
-                    </dt>
-                    <dd className="text-sm">
-                      <Badge tone={p.floorCategory === 'ground_plus_one' ? 'blue' : 'slate'}>
-                        {p.floorCategory === 'ground_plus_one' ? t.plans.floorGroundPlusOne : t.plans.floorHigherFloors}
-                      </Badge>
-                    </dd>
-                  </div>
-                  <div className="flex items-start justify-between gap-3">
-                    <dt className="text-xs tracking-wide text-(--color-text-muted) uppercase">
                       {t.plans.duration}
                     </dt>
                     <dd className="text-sm">
@@ -172,9 +158,15 @@ export function PlansTable({ plans }: { plans: Plan[] }) {
                   </div>
                   <div className="flex items-start justify-between gap-3">
                     <dt className="text-xs tracking-wide text-(--color-text-muted) uppercase">
-                      {t.plans.price}
+                      {t.plans.priceGroundPlusOne}
                     </dt>
-                    <dd className="text-sm">{formatCurrency(p.price)}</dd>
+                    <dd className="text-sm">{formatCurrency(p.priceGroundPlusOne)}</dd>
+                  </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <dt className="text-xs tracking-wide text-(--color-text-muted) uppercase">
+                      {t.plans.priceHigherFloors}
+                    </dt>
+                    <dd className="text-sm">{formatCurrency(p.priceHigherFloors)}</dd>
                   </div>
                   <div className="flex items-start justify-between gap-3">
                     <dt className="text-xs tracking-wide text-(--color-text-muted) uppercase">

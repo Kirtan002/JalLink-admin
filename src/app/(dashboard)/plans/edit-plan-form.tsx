@@ -60,29 +60,29 @@ export function EditPlanForm({ plan, onDone }: { plan: Plan; onDone: () => void 
             className={`w-24 ${inputClass}`}
           />
         </FormField>
-        <FormField label={t.plans.price} htmlFor={`price-${plan.id}`} compact>
+        <FormField label={t.plans.priceGroundPlusOne} htmlFor={`priceGroundPlusOne-${plan.id}`} compact>
           <input
-            id={`price-${plan.id}`}
-            name="price"
+            id={`priceGroundPlusOne-${plan.id}`}
+            name="priceGroundPlusOne"
             type="number"
             min={0}
             step="0.01"
-            defaultValue={plan.price}
+            defaultValue={plan.priceGroundPlusOne}
             required
             className={`w-28 ${inputClass}`}
           />
         </FormField>
-        <FormField label={t.plans.floorCategory} htmlFor={`floorCategory-${plan.id}`} compact>
-          <select
-            id={`floorCategory-${plan.id}`}
-            name="floorCategory"
+        <FormField label={t.plans.priceHigherFloors} htmlFor={`priceHigherFloors-${plan.id}`} compact>
+          <input
+            id={`priceHigherFloors-${plan.id}`}
+            name="priceHigherFloors"
+            type="number"
+            min={0}
+            step="0.01"
+            defaultValue={plan.priceHigherFloors}
             required
-            defaultValue={plan.floorCategory}
-            className={inputClass}
-          >
-            <option value="ground_plus_one">{t.plans.floorGroundPlusOne}</option>
-            <option value="higher_floors">{t.plans.floorHigherFloors}</option>
-          </select>
+            className={`w-28 ${inputClass}`}
+          />
         </FormField>
       </div>
 

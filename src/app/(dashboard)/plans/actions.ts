@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { requireSession } from '@/lib/auth';
 import { api, ApiError } from '@/lib/api';
-import type { CreatePlanInput, FloorCategory } from '@/lib/types';
+import type { CreatePlanInput } from '@/lib/types';
 
 export interface PlanFormState {
   error?: string;
@@ -19,8 +19,8 @@ function parsePlanForm(formData: FormData): CreatePlanInput | { error: string } 
   const name = String(formData.get('name') ?? '').trim();
   const durationDays = Number(formData.get('durationDays'));
   const bottleSizeLtr = Number(formData.get('bottleSizeLtr'));
-  const price = Number(formData.get('price'));
-  const floorCategory = String(formData.get('floorCategory') ?? '');
+  const priceGroundPlusOne = Number(formData.get('priceGroundPlusOne'));
+  const priceHigherFloors = Number(formData.get('priceHigherFloors'));
   const tier1Percent = Number(formData.get('tier1Percent'));
   const tier2Percent = Number(formData.get('tier2Percent'));
   const tier3Percent = Number(formData.get('tier3Percent'));
@@ -33,11 +33,11 @@ function parsePlanForm(formData: FormData): CreatePlanInput | { error: string } 
   if (!Number.isInteger(bottleSizeLtr) || bottleSizeLtr <= 0) {
     return { error: 'Bottle size must be a positive whole number' };
   }
-  if (!Number.isFinite(price) || price <= 0) {
-    return { error: 'Price must be greater than 0' };
+  if (!Number.isFinite(priceGroundPlusOne) || priceGroundPlusOne <= 0) {
+    return { error: 'Ground + 1 price must be greater than 0' };
   }
-  if (floorCategory !== 'ground_plus_one' && floorCategory !== 'higher_floors') {
-    return { error: 'Floor category is required' };
+  if (!Number.isFinite(priceHigherFloors) || priceHigherFloors <= 0) {
+    return { error: 'Higher floors price must be greater than 0' };
   }
   for (const [label, value] of [
     ['Tier 1', tier1Percent],
@@ -54,8 +54,8 @@ function parsePlanForm(formData: FormData): CreatePlanInput | { error: string } 
     name,
     durationDays,
     bottleSizeLtr,
-    price,
-    floorCategory: floorCategory as FloorCategory,
+    priceGroundPlusOne,
+    priceHigherFloors,
     tier1Percent,
     tier2Percent,
     tier3Percent,

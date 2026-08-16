@@ -46,10 +46,14 @@ export function CreatePlanForm() {
             className={`w-24 ${inputClass}`}
           />
         </FormField>
-        <FormField label={t.plans.price} htmlFor="price" hint={t.plans.priceHint} className="max-w-xs">
+        <FormField
+          label={t.plans.priceGroundPlusOne}
+          htmlFor="priceGroundPlusOne"
+          hint={t.plans.priceGroundPlusOneHint}
+        >
           <input
-            id="price"
-            name="price"
+            id="priceGroundPlusOne"
+            name="priceGroundPlusOne"
             type="number"
             min={0}
             step="0.01"
@@ -58,11 +62,21 @@ export function CreatePlanForm() {
             className={`w-28 ${inputClass}`}
           />
         </FormField>
-        <FormField label={t.plans.floorCategory} htmlFor="floorCategory">
-          <select id="floorCategory" name="floorCategory" required defaultValue="ground_plus_one" className={inputClass}>
-            <option value="ground_plus_one">{t.plans.floorGroundPlusOne}</option>
-            <option value="higher_floors">{t.plans.floorHigherFloors}</option>
-          </select>
+        <FormField
+          label={t.plans.priceHigherFloors}
+          htmlFor="priceHigherFloors"
+          hint={t.plans.priceHigherFloorsHint}
+        >
+          <input
+            id="priceHigherFloors"
+            name="priceHigherFloors"
+            type="number"
+            min={0}
+            step="0.01"
+            placeholder="1800"
+            required
+            className={`w-28 ${inputClass}`}
+          />
         </FormField>
       </div>
 
